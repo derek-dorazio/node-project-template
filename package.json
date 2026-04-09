@@ -44,5 +44,19 @@
     "db:seed": "cd packages/core-api && npx prisma db seed",
     "db:reset": "cd packages/core-api && npx prisma migrate reset",
     "db:studio": "cd packages/core-api && npx prisma studio"
+  },
+  "devDependencies": {
+    "istanbul-lib-coverage": "^3.2.0",
+    "istanbul-lib-report": "^3.0.0",
+    "istanbul-reports": "^3.1.0",
+    "v8-to-istanbul": "^9.3.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint": "^9.0.0",
+    "turbo": "^2.0.0",
+    "@hey-api/openapi-ts": "^0.61.0",
+    "prisma": "^6.0.0"
   }
 }

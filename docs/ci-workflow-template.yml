@@ -229,6 +229,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
       - name: Build service
         run: npm run build:service
 
