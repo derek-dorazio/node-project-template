@@ -95,6 +95,11 @@ jobs:
       - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
       - name: Service unit tests
         run: npm run test:coverage:service:unit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: service-unit-coverage
+          path: coverage/service-unit/
+          retention-days: 1
 
   service-integration-tests:
     needs: [lint, typecheck]
@@ -127,6 +132,11 @@ jobs:
       - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
       - name: Service integration tests
         run: npm run test:coverage:service:integration
+      - uses: actions/upload-artifact@v4
+        with:
+          name: service-integration-coverage
+          path: coverage/service-integration/
+          retention-days: 1
 
   service-functional-api-tests:
     needs: [lint, typecheck]
@@ -159,6 +169,11 @@ jobs:
       - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
       - name: Service functional API tests
         run: npm run test:service:functional-api:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: service-functional-api-coverage
+          path: coverage/service-functional-api/
+          retention-days: 1
 
   service-coverage-report:
     needs: [service-unit-tests, service-integration-tests, service-functional-api-tests]
@@ -170,12 +185,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: service-unit-coverage
+          path: coverage/service-unit/
+      - uses: actions/download-artifact@v4
+        with:
+          name: service-integration-coverage
+          path: coverage/service-integration/
+      - uses: actions/download-artifact@v4
+        with:
+          name: service-functional-api-coverage
+          path: coverage/service-functional-api/
       - name: Merge service coverage
-        run: npm run test:coverage:service:merged
+        run: node scripts/merge-service-coverage.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: service-coverage-report
-          path: coverage/
+          path: coverage/service-merged/
           retention-days: 7
 
   projectName-unit-tests:
