@@ -36,7 +36,7 @@ git init
 
 ### Prerequisites
 
-- Node.js 20+ (`node -v`)
+- Node.js 22+ (`node -v`)
 - Docker Desktop (for Postgres)
 - npm 10+ (`npm -v`)
 

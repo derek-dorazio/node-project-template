@@ -22,7 +22,7 @@ All plan documents and implementation work must conform to these rules. This is 
 | API contract | OpenAPI 3.1 generated from live Fastify route schemas | [Service Rules](service-rules.md) |
 | Client generation | `@hey-api/openapi-ts` + `@hey-api/client-fetch` | [Service Rules](service-rules.md) |
 | ORM / DB access | Prisma | [Service Rules](service-rules.md) |
-| Runtime | Node.js 20+ LTS | — |
+| Runtime | Node.js 22+ LTS | — |
 | Queue / async work | In-process event bus; add external queueing only when the architecture truly needs it | — |
 | Auth | App-issued JWT access + refresh tokens, with social auth callback support | [Service Rules](service-rules.md) |
 
