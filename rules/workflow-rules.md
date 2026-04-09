@@ -169,14 +169,14 @@ Before pushing code, agents must run the full local quality gate set unless expl
 
 Required local pre-push commands:
 
-1. `npx turbo typecheck --force`
-2. `npx eslint --max-warnings 0`
-3. Backend unit tests
-4. DB-backed integration tests
-5. SDK functional API tests
-6. Merged backend coverage
-7. Frontend unit tests
-8. `npm run api:refresh` and `npm run api:validate` when API schemas change
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npm run test:service:unit`
+4. `npm run test:service:integration`
+5. `npm run test:service:functional-api`
+6. `npm run test:coverage:service:merged`
+7. `npm run test:<projectName>:unit`
+8. `npm run openapi-contract-check` when API schemas change
 
 Rules:
 

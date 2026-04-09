@@ -60,14 +60,14 @@ All services and clients must follow these testing standards. This document defi
 
 Before pushing code:
 
-1. `npx turbo typecheck --force`
-2. `npx eslint --max-warnings 0`
-3. `npx jest --config tests/jest.config.js --forceExit` (unit tests)
-4. `npx jest --config tests/integration/jest.config.js --forceExit` (integration)
-5. `npx jest --config tests/functional/jest.config.js --forceExit` (functional API)
-6. `npm run test:coverage:backend` (merged coverage)
-7. Frontend unit tests (`npx vitest run`)
-8. `npm run api:refresh` and `npm run api:validate` when API schemas change
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npm run test:service:unit` (service unit tests)
+4. `npm run test:service:integration` (service DB integration tests)
+5. `npm run test:service:functional-api` (service SDK functional API tests)
+6. `npm run test:coverage:service:merged` (merged service coverage)
+7. `npm run test:<projectName>:unit` (frontend unit tests)
+8. `npm run openapi-contract-check` when API schemas change
 
 Notes:
 - Treat these as pre-push gates, not optional follow-up checks.

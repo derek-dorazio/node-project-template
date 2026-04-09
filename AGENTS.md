@@ -31,13 +31,13 @@ Before implementing any work, read and follow:
 
 Before pushing code, agents must pass the required local validation set:
 
-1. `npx turbo typecheck --force`
-2. `npx eslint --max-warnings 0`
-3. Backend unit tests
-4. Backend integration tests
-5. SDK functional API tests
-6. Merged backend coverage
-7. `npm run api:refresh` and `npm run api:validate` when API schemas change
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npm run test:service:unit`
+4. `npm run test:service:integration`
+5. `npm run test:service:functional-api`
+6. `npm run test:coverage:service:merged`
+7. `npm run openapi-contract-check` when API schemas change
 
 CI-only follow-up signals (not required pre-push):
 - Deployed smoke tests

@@ -41,7 +41,7 @@ A backend slice that changes a domain model must update ALL applicable layers. D
 
 ### 5. Tests
 
-- [ ] Update backend unit/integration tests
+- [ ] Update service unit/integration tests
 - [ ] Update or add SDK functional API tests
 - [ ] Update smoke tests if changed field is on the critical deployment path
 - [ ] Update browser E2E if applicable

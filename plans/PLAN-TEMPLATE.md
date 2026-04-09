@@ -95,9 +95,9 @@
 
 <!-- How to verify this plan's work is complete. Typically the standard quality gates. -->
 
-- [ ] `npx turbo typecheck --force`
-- [ ] `npx eslint --max-warnings 0`
-- [ ] All backend tests pass (unit + integration + functional)
-- [ ] `npm run api:refresh` and `npm run api:validate`
+- [ ] `npm run typecheck`
+- [ ] `npm run lint`
+- [ ] All service tests pass (`test:service:unit` + `test:service:integration` + `test:service:functional-api`)
+- [ ] `npm run openapi-contract-check`
 - [ ] Coverage on changed files meets threshold
 - [ ] Use-case journeys covered by functional API tests

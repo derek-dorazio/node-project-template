@@ -27,7 +27,7 @@
     "test:service:functional-api:coverage": "jest --config tests/functional/jest.config.js --forceExit --coverage",
     "test:coverage:service:unit": "jest --config tests/jest.config.js --coverage --forceExit",
     "test:coverage:service:integration": "jest --config tests/integration/jest.config.js --coverage --forceExit",
-    "test:coverage:service:merged": "node scripts/run-backend-coverage.mjs",
+    "test:coverage:service:merged": "node scripts/run-service-coverage.mjs",
 
     "test:<projectName>:unit": "cd clients/<projectName> && npx vitest run",
 

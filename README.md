@@ -60,14 +60,14 @@ See `rules/workflow-rules.md` for the full lifecycle.
 Before pushing code:
 
 ```bash
-npx turbo typecheck --force           # Type checking
-npx eslint --max-warnings 0           # Linting
-npm run test:unit                      # Unit tests
-npm run test:integration               # DB integration tests
-npm run test:functional                # SDK functional API tests
-npm run test:coverage:backend          # Merged coverage report
-npm run api:refresh                    # Regenerate API client (if schemas changed)
-npm run api:validate                   # Validate OpenAPI spec
+npm run typecheck                              # Type checking
+npm run lint                                   # Linting
+npm run test:service:unit                      # Service unit tests
+npm run test:service:integration               # Service DB integration tests
+npm run test:service:functional-api            # Service SDK functional API tests
+npm run test:coverage:service:merged           # Merged service coverage report
+npm run "test:<projectName>:unit"              # Frontend unit tests
+npm run openapi-contract-check                 # Validate OpenAPI spec (if schemas changed)
 ```
 
 ## Tech Stack
