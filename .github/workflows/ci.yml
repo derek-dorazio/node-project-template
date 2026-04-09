@@ -1,0 +1,137 @@
+# CI/CD Pipeline Template
+#
+# This is a starter CI workflow. Customize for your project.
+#
+# Pipeline stages:
+#   1. Lint + Typecheck
+#   2. Backend unit tests (with Postgres service container)
+#   3. Backend integration tests
+#   4. SDK functional API tests
+#   5. Frontend unit tests
+#   6. Coverage merge and reporting
+#   7. Build
+#   8. (Deploy stages — add when ready)
+#   9. Post-deploy smoke tests
+#   10. Post-deploy browser E2E
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npx turbo typecheck --force
+      - run: npx eslint --max-warnings 0
+
+  test:
+    needs: lint-typecheck
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      JWT_SECRET: test-secret-change-in-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
+
+      # Unit tests with coverage
+      - name: Run unit tests
+        run: npm run test:coverage:unit
+
+      # Integration tests with coverage
+      - name: Run integration tests
+        run: npm run test:coverage:integration
+
+      # SDK functional API tests with coverage
+      - name: Run functional API tests
+        run: npm run test:functional:coverage
+
+      # Merge backend coverage
+      - name: Merge backend coverage
+        run: npm run test:coverage:backend
+
+      # Upload coverage artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage/
+          retention-days: 7
+
+  test-frontend:
+    needs: lint-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo build --filter=@<projectName>/shared
+      - name: Run frontend tests
+        run: cd clients/<projectName> && npx vitest run --coverage
+
+  build:
+    needs: lint-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx turbo build
+
+  # Uncomment and customize when deployment is ready:
+  #
+  # deploy:
+  #   needs: [test, test-frontend, build]
+  #   if: github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - # Deploy steps here
+  #
+  # smoke-test:
+  #   needs: deploy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: npm run test:smoke:api
+  #
+  # e2e-test:
+  #   needs: smoke-test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: npm run test:smoke:e2e

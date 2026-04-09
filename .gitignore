@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-tests/
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Coverage
+coverage/
+
+# Generated (committed, but don't edit by hand)
+# packages/shared/generated/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Prisma
+packages/core-api/prisma/*.db
+
+# Playwright
+clients/*/test-results/
+clients/*/playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
