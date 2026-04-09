@@ -11,25 +11,35 @@
     "clients/*"
   ],
   "scripts": {
-    "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+
+    "build": "turbo run build",
+    "build:service": "turbo run build --filter=@<projectName>/core-api --filter=@<projectName>/shared",
+    "build:<projectName>": "turbo run build --filter=@<projectName>/<projectName>",
+
     "lint": "eslint --max-warnings 0",
     "typecheck": "turbo run typecheck --force",
-    "test": "jest --config tests/jest.config.js --forceExit",
-    "test:unit": "jest --config tests/jest.config.js tests/unit --forceExit",
-    "test:integration": "jest --config tests/integration/jest.config.js --forceExit",
-    "test:functional": "jest --config tests/functional/jest.config.js --forceExit",
-    "test:functional:coverage": "jest --config tests/functional/jest.config.js --forceExit --coverage",
-    "test:coverage:unit": "jest --config tests/jest.config.js --coverage --forceExit",
-    "test:coverage:integration": "jest --config tests/integration/jest.config.js --coverage --forceExit",
-    "test:coverage:backend": "node scripts/run-backend-coverage.mjs",
+    "openapi-contract-check": "npm run api:export && npm run api:validate",
+
+    "test:service:unit": "jest --config tests/jest.config.js tests/unit --forceExit",
+    "test:service:integration": "jest --config tests/integration/jest.config.js --forceExit",
+    "test:service:functional-api": "jest --config tests/functional/jest.config.js --forceExit",
+    "test:service:functional-api:coverage": "jest --config tests/functional/jest.config.js --forceExit --coverage",
+    "test:coverage:service:unit": "jest --config tests/jest.config.js --coverage --forceExit",
+    "test:coverage:service:integration": "jest --config tests/integration/jest.config.js --coverage --forceExit",
+    "test:coverage:service:merged": "node scripts/run-backend-coverage.mjs",
+
+    "test:<projectName>:unit": "cd clients/<projectName> && npx vitest run",
+
     "test:smoke:api": "jest --config tests/api/jest.config.ts --forceExit",
     "test:smoke:e2e": "cd clients/<projectName> && npx playwright test",
     "test:smoke": "npm run test:smoke:api && npm run test:smoke:e2e",
+
     "api:export": "cd packages/core-api && node -e \"require('./dist/index.js')\" --export-openapi",
     "api:generate": "cd packages/shared && npx @hey-api/openapi-ts",
     "api:validate": "node scripts/validate-openapi.mjs",
     "api:refresh": "npm run api:export && npm run api:generate && npm run api:validate",
+
     "db:migrate": "cd packages/core-api && npx prisma migrate dev",
     "db:seed": "cd packages/core-api && npx prisma db seed",
     "db:reset": "cd packages/core-api && npx prisma migrate reset",

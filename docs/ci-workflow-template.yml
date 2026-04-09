@@ -1,15 +1,19 @@
 # CI/CD Pipeline Template
 #
-# This is a starter CI workflow. Customize for your project.
+# Naming convention: scope-testtype-target
+#   Service:    service-build, service-unit-tests, service-integration-tests,
+#               service-functional-api-tests, service-coverage-report
+#   App:        <projectName>-build, <projectName>-unit-tests
+#   Repo-wide:  lint, typecheck, openapi-contract-check
 #
 # Pipeline stages:
-#   1. Lint + Typecheck
-#   2. Backend unit tests (with Postgres service container)
-#   3. Backend integration tests
-#   4. SDK functional API tests
-#   5. Frontend unit tests
-#   6. Coverage merge and reporting
-#   7. Build
+#   1. lint + typecheck + openapi-contract-check
+#   2. service-unit-tests (with Postgres service container)
+#   3. service-integration-tests
+#   4. service-functional-api-tests
+#   5. service-coverage-report
+#   6. <projectName>-unit-tests
+#   7. service-build + <projectName>-build
 #   8. (Deploy stages — add when ready)
 #   9. Post-deploy smoke tests
 #   10. Post-deploy browser E2E
@@ -23,7 +27,7 @@ on:
     branches: [main]
 
 jobs:
-  lint-typecheck:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +37,35 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
-      - run: npx turbo typecheck --force
-      - run: npx eslint --max-warnings 0
+      - run: npm run lint
 
-  test:
-    needs: lint-typecheck
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npm run typecheck
+
+  openapi-contract-check:
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npm run openapi-contract-check
+
+  service-unit-tests:
+    needs: [lint, typecheck]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -65,32 +93,93 @@ jobs:
       - run: npm ci
       - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
       - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
+      - name: Service unit tests
+        run: npm run test:coverage:service:unit
 
-      # Unit tests with coverage
-      - name: Run unit tests
-        run: npm run test:coverage:unit
+  service-integration-tests:
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      JWT_SECRET: test-secret-change-in-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
+      - name: Service integration tests
+        run: npm run test:coverage:service:integration
 
-      # Integration tests with coverage
-      - name: Run integration tests
-        run: npm run test:coverage:integration
+  service-functional-api-tests:
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      JWT_SECRET: test-secret-change-in-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
+      - name: Service functional API tests
+        run: npm run test:service:functional-api:coverage
 
-      # SDK functional API tests with coverage
-      - name: Run functional API tests
-        run: npm run test:functional:coverage
-
-      # Merge backend coverage
-      - name: Merge backend coverage
-        run: npm run test:coverage:backend
-
-      # Upload coverage artifacts
+  service-coverage-report:
+    needs: [service-unit-tests, service-integration-tests, service-functional-api-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Merge service coverage
+        run: npm run test:coverage:service:merged
       - uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage
+          name: service-coverage-report
           path: coverage/
           retention-days: 7
 
-  test-frontend:
-    needs: lint-typecheck
+  projectName-unit-tests:
+    needs: [lint, typecheck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -100,11 +189,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx turbo build --filter=@<projectName>/shared
-      - name: Run frontend tests
-        run: cd clients/<projectName> && npx vitest run --coverage
+      - name: "<projectName> unit tests"
+        run: npm run "test:<projectName>:unit"
 
-  build:
-    needs: lint-typecheck
+  service-build:
+    needs: [lint, typecheck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,12 +202,26 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx turbo build
+      - name: Build service
+        run: npm run build:service
+
+  projectName-build:
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: "Build <projectName>"
+        run: "npm run build:<projectName>"
 
   # Uncomment and customize when deployment is ready:
   #
   # deploy:
-  #   needs: [test, test-frontend, build]
+  #   needs: [service-coverage-report, projectName-unit-tests, service-build, projectName-build]
   #   if: github.ref == 'refs/heads/main'
   #   runs-on: ubuntu-latest
   #   steps:
