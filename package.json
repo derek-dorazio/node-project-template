@@ -23,8 +23,8 @@
 
     "test:service:unit": "jest --config tests/jest.config.js tests/unit --forceExit",
     "test:service:integration": "jest --config tests/integration/jest.config.js --forceExit",
-    "test:service:functional-api": "jest --config tests/functional/jest.config.js --forceExit",
-    "test:service:functional-api:coverage": "jest --config tests/functional/jest.config.js --forceExit --coverage",
+    "test:service:functional-api": "npm run build --workspace @<projectName>/shared && jest --config tests/functional/jest.config.js --forceExit",
+    "test:service:functional-api:coverage": "npm run build --workspace @<projectName>/shared && jest --config tests/functional/jest.config.js --forceExit --coverage",
     "test:coverage:service:unit": "jest --config tests/jest.config.js --coverage --forceExit",
     "test:coverage:service:integration": "jest --config tests/integration/jest.config.js --coverage --forceExit",
     "test:coverage:service:merged": "node scripts/run-service-coverage.mjs",
