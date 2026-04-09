@@ -1,0 +1,19 @@
+# Staging environment
+# Copy to staging.tfvars and set db_password: cp staging.tfvars.example staging.tfvars
+environment = "staging"
+region      = "us-east-2"  # TODO: set your region
+
+# Database
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_password          = "CHANGE_ME_staging_password"
+
+# ECS
+ecs_cpu    = 256
+ecs_memory = 512
+core_api_bootstrap_image_tag = "bootstrap"
+
+# Domain (optional)
+# domain_name         = "myapp.com"
+# acm_certificate_arn = "arn:aws:acm:us-east-2:ACCOUNT_ID:certificate/CERT_ID"
+# route53_zone_id     = "Z0000000000000"

@@ -1,0 +1,19 @@
+# QA environment
+# Copy to qa.tfvars and set db_password: cp qa.tfvars.example qa.tfvars
+environment = "qa"
+region      = "us-east-2"  # TODO: set your region
+
+# Database
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_password          = "CHANGE_ME_qa_password"
+
+# ECS
+ecs_cpu    = 256
+ecs_memory = 512
+core_api_bootstrap_image_tag = "bootstrap"
+
+# Domain (optional — leave commented out to use CloudFront default domain)
+# domain_name         = "myapp.com"
+# acm_certificate_arn = "arn:aws:acm:us-east-2:ACCOUNT_ID:certificate/CERT_ID"
+# route53_zone_id     = "Z0000000000000"

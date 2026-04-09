@@ -1,0 +1,36 @@
+FROM node:20-slim AS base
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY packages/shared/ ./packages/shared/
+COPY packages/core-api/ ./packages/core-api/
+
+RUN npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+
+# Build shared package
+RUN cd packages/shared && npx tsc
+
+# Symlink shared into node_modules for runtime resolution
+# TODO: Replace <projectName> with your actual package scope
+RUN mkdir -p node_modules/@<projectName> && ln -sf /app/packages/shared node_modules/@<projectName>/shared
+
+# Generate Prisma client
+RUN npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+
+# Build core-api
+RUN cd packages/core-api && npx tsc
+
+# --- Runtime ---
+FROM node:20-slim
+WORKDIR /app
+
+COPY --from=base /app/packages/core-api/dist ./dist
+COPY --from=base /app/packages/core-api/package.json ./
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/packages/shared ./packages/shared
+# TODO: Replace <projectName> with your actual package scope
+RUN mkdir -p node_modules/@<projectName> && ln -sf /app/packages/shared node_modules/@<projectName>/shared
+COPY --from=base /app/packages/core-api/prisma ./prisma
+
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
