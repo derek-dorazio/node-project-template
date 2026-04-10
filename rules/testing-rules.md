@@ -217,16 +217,18 @@ Prefer to keep data integration tests for:
 - Draft/roster persistence details that are more about stored state than client workflow
 - Query/read-model correctness where the main proof is "this returns the correct data from the real DB"
 
-### Data Integration Test Depth
+### Data Integration Depth Requirement
 
-Data integration test files must not be single-case stubs. Each file should include at minimum:
+Data integration files should prove a meaningful slice of persistence or lower-level runtime behavior, not stop at a single happy-path stub.
 
-- **Happy path**: The primary CRUD or query operation succeeds with valid inputs.
-- **Validation/constraint path**: Invalid input or constraint violation is rejected correctly.
-- **Edge case**: Boundary conditions such as empty results, null fields, duplicate keys, or cascade behavior.
-- **Query variations**: If the repository supports filtering, sorting, or pagination, cover representative combinations.
-
-Aim for 3-5 test cases per domain data integration file.
+- Prefer 3-5 substantial cases per file when the surface naturally supports it.
+- Cover the relevant mix of:
+  - Happy path
+  - Negative validation path
+  - Permission/authorization path where applicable
+  - Not-found or missing-state path where applicable
+- It is acceptable for a highly focused persistence file to have fewer cases when the subject is intentionally narrow, but that should be the exception rather than the default.
+- Do not create placeholder data-integration files that only prove one trivial success path and leave the real persistence/query behavior untested.
 
 ---
 
