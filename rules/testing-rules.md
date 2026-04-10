@@ -214,8 +214,9 @@ Prefer to keep data integration tests for:
 - Scoring persistence/recalculation
 - Repository-heavy ingestion persistence
 - History fallback logic
-- Draft/roster persistence details that are more about stored state than client workflow
+- Domain-specific persistence details that are more about stored state than client workflow
 - Query/read-model correctness where the main proof is "this returns the correct data from the real DB"
+- Representative permanent keep areas: any domain module where the primary value is proving DB-layer correctness (e.g., complex aggregation queries, configuration persistence, read-model materialization, repository queries with joins/filters) rather than client-visible API workflows
 
 ### Data Integration Depth Requirement
 
