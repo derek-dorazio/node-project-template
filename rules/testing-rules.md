@@ -312,6 +312,7 @@ Integration and functional tests share a single Postgres database and run serial
 - Tests must not depend on execution order.
 - Use unique identifiers for all created records.
 - Treat `<projectName>_test` as an always-disposable local test database. It is acceptable to reset or recreate it before an integration, FAPI, or merged coverage run.
+- Backend work must not be pushed with required test gates intentionally skipped. CI is confirmation, not the first place we discover missing local validation.
 - When a slice changes the backend model, rerun and repair every impacted suite in the local gate set as part of that slice. Stale mocks, factories, builders, or setup helpers are not separate cleanup work; they are part of the slice.
 
 Do not rely on `prisma migrate reset` to compensate for hidden inter-test dependencies or bad cleanup. Tests must still be idempotent against a reused database within normal local and CI execution.

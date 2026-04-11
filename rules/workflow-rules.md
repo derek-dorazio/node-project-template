@@ -182,8 +182,12 @@ Rules:
 
 - Treat these as pre-push gates, not optional follow-up checks.
 - Do not rely on CI to discover failures that could have been caught locally.
-- If a gate is blocked by local environment constraints, state that clearly before pushing.
+- Do not push backend changes on a "likely green" assumption. The local gate must actually pass first.
+- Do not intentionally skip required backend gates and defer that validation to CI.
 - Coverage threshold enforcement is part of the required gate.
+- If a gate is blocked by local environment constraints, state that clearly before pushing.
+- For backend/service changes, the default is simple: no push until lint, typecheck, unit, data integration, FAPI, and merged service coverage have passed locally. If API contracts changed, `openapi-contract-check` must also pass first.
+- If a DB-backed backend gate fails only because the sandbox cannot reach the local database, rerun that exact command outside the sandbox before pushing. Do not treat the sandbox failure as permission to skip the gate.
 
 ---
 
