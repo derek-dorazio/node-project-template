@@ -311,7 +311,12 @@ Integration and functional tests share a single Postgres database and run serial
 - Tests must not depend on data created by other test files.
 - Tests must not depend on execution order.
 - Use unique identifiers for all created records.
-- Do not rely on `prisma migrate reset` between test runs. Tests must be idempotent against a persistent database.
+- Treat `<projectName>_test` as an always-disposable local test database. It is acceptable to reset or recreate it before an integration, FAPI, or merged coverage run.
+- When a slice changes the backend model, rerun and repair every impacted suite in the local gate set as part of that slice. Stale mocks, factories, builders, or setup helpers are not separate cleanup work; they are part of the slice.
+
+Do not rely on `prisma migrate reset` to compensate for hidden inter-test dependencies or bad cleanup. Tests must still be idempotent against a reused database within normal local and CI execution.
+
+However, the local `<projectName>_test` database is intentionally disposable. It is acceptable to reset or recreate it before a validation run when you need a clean migrated schema.
 
 ---
 

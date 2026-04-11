@@ -43,7 +43,14 @@
     "db:migrate": "cd packages/core-api && npx prisma migrate dev",
     "db:seed": "cd packages/core-api && npx prisma db seed",
     "db:reset": "cd packages/core-api && npx prisma migrate reset",
-    "db:studio": "cd packages/core-api && npx prisma studio"
+    "db:test:migrate": "cd packages/core-api && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/<projectName>_test npx prisma migrate deploy --schema prisma/schema.prisma",
+    "db:test:reset": "cd packages/core-api && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/<projectName>_test npx prisma migrate reset --force --skip-seed --schema prisma/schema.prisma",
+    "db:test:recreate": "npm run db:test:reset",
+    "db:studio": "cd packages/core-api && npx prisma studio",
+
+    "test:service:integration:fresh": "npm run db:test:reset && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/<projectName>_test npm run test:service:integration",
+    "test:service:functional-api:fresh": "npm run db:test:reset && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/<projectName>_test npm run test:service:functional-api",
+    "test:coverage:service:fresh": "npm run db:test:reset && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/<projectName>_test npm run test:coverage:service:merged"
   },
   "devDependencies": {
     "istanbul-lib-coverage": "^3.2.0",

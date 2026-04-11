@@ -73,6 +73,45 @@ npm run dev
 - Mailpit UI: http://localhost:8025 (captures outbound email)
 - Prisma Studio: `npm run db:studio` → http://localhost:5555
 
+### Database Commands
+
+```bash
+npm run db:migrate         # Run Prisma migrations (dev database)
+npm run db:seed            # Run minimal bootstrap seed step
+npm run db:reset           # Reset dev database (drops all data)
+npm run db:test:migrate    # Apply migrations to disposable test DB
+npm run db:test:reset      # Reset disposable test DB and reapply migrations
+npm run db:test:recreate   # Alias for db:test:reset
+npm run db:studio          # Open Prisma Studio (visual DB browser)
+```
+
+### Local Database Roles
+
+- **`<projectName>`** — persistent local development database. Keep working state here while building features manually.
+- **`<projectName>_test`** — disposable local test database. Used for data integration, functional API, and merged service coverage runs. Safe to reset or recreate at any time.
+
+Recommended rule: do not preserve manual development state in `<projectName>_test`. If test migrations drift or a validation run wedges the schema, run `npm run db:test:reset`.
+
+### Running Tests
+
+```bash
+# Service unit tests
+npm run test:service:unit
+
+# Service data integration tests
+npm run test:service:integration
+
+# Service functional API tests
+npm run test:service:functional-api
+
+# Same runs, but first recreate the disposable test DB
+npm run test:service:integration:fresh
+npm run test:service:functional-api:fresh
+
+# Merged service coverage (fresh DB)
+npm run test:coverage:service:fresh
+```
+
 ---
 
 ## 3. AWS Account Setup
