@@ -2,6 +2,13 @@
 
 This is the canonical instruction file for coding agents working on `<projectName>`.
 
+All agents working in this repo should:
+
+1. Read this file first.
+2. Treat the files in `rules/` as the detailed source of truth for architecture, implementation, testing, and workflow requirements.
+3. Treat persona playbooks in `agents/` as role-specific execution guides layered on top of the shared rules, not as competing policy sources.
+4. Keep `CLAUDE.md` as a thin pointer to this file rather than maintaining duplicate policy text elsewhere.
+
 ## Non-Negotiables
 
 - Never add mock data, fake data, or hardcoded sample responses to application code.
@@ -20,12 +27,33 @@ Before implementing any work, read and follow:
 5. **[Testing Rules](testing-rules.md)** — unit, integration, functional API, smoke, E2E, and contract testing strategy
 6. **[Model Change Rules](model-change-rules.md)** — definition of done when domain models change
 
+## Persona Playbooks
+
+The `agents/` directory contains role-scoped playbooks for common kinds of work:
+
+- `agents/product-manager.md` — requirements discovery, use-case design, UX flow review
+- `agents/project-manager.md` — slicing work, sequencing, plan reconciliation
+- `agents/data-modeler.md` — domain model derivation, Mermaid diagrams, data dictionaries
+- `agents/architect.md` — design plans, execution slices, CI/CD, infrastructure
+- `agents/backend-developer.md` — service implementation, DTOs, mappers, backend tests
+- `agents/frontend-developer.md` — React app implementation, SDK consumption, frontend tests
+- `agents/code-reviewer.md` — review passes, findings tables, acceptance decisions
+
+Use these playbooks to focus the workflow for that role.
+
+Important:
+
+- `AGENTS.md` and `rules/` remain the canonical shared contract.
+- `agents/` files must not redefine or contradict repo-wide policy.
+- Cross-cutting workflow requirements such as checking plans, updating task rows, and validating slices remain required for all agents, not just the project-manager persona.
+
 ## Workflow Expectations
 
 - Follow the spec-driven lifecycle: Requirements → Domain Model → Use Cases → Design Plans → Execution Plans → Implementation.
 - Track work through plan task tables. Mark tasks `In Progress` when starting, `Done` when all layers are complete.
 - Do not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.
 - Update every affected plan when finishing work.
+- Do not maintain competing instruction sets across `AGENTS.md`, `CLAUDE.md`, `rules/`, and `agents/`.
 
 ## Quality Gates
 

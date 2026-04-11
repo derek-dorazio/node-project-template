@@ -195,7 +195,36 @@ Rules:
 
 ---
 
-## 7. Plan Closeout and Archiving
+## 7. Use-Case Design Must Surface Backend Implications
+
+When designing new webapp features or product flows, the design review must explicitly surface any implied backend or model changes required by the proposed behavior, including:
+
+- Prisma/model changes
+- Migrations or backfills
+- New DTOs or API routes
+- Backend auth/session or invitation-flow changes
+
+Confirm those backend implications with the project owner before implementation begins.
+
+Do not assume that an early scaffold or placeholder page defines the final product flow. Plans should be use-case driven and confirmed with the project owner before implementation expands.
+
+---
+
+## 8. Persona Playbooks
+
+- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, project management, backend implementation, frontend implementation, architecture/platform work, and code review.
+- These playbooks are execution aids, not replacement policy sources.
+- `AGENTS.md` and `rules/` remain canonical.
+- Cross-cutting workflow requirements remain mandatory for all personas, including:
+  - Checking for active plans
+  - Updating task rows for the exact slice worked
+  - Validating work before marking slices done
+  - Updating docs and rules when the change affects them
+- The `project-manager` persona may help with plan shaping, sequencing, and progress reconciliation, but it is not the sole owner of task tracking. Agents doing implementation work must still update plans themselves.
+
+---
+
+## 9. Plan Closeout and Archiving
 
 - Plans are execution tools, not long-lived policy documents. Durable rules belong in `rules/`, not in active plans.
 - When all tasks in a plan are done or removed, archive it under `plans/archive/`.
