@@ -2,7 +2,27 @@
 
 ## Definition of Done for Backend Slices
 
-A backend slice that changes a domain model must update ALL applicable layers. Do not mark a slice done if any applicable layer is intentionally stale.
+A backend slice that changes the domain model is not done until all applicable layers are updated:
+
+- Schema, migration, ORM/entity mapping, DTOs, route schemas
+- OpenAPI refresh/validate
+- Unit tests
+- DB data integration tests
+- Contract-verification tests
+- Functional API tests
+- Browser E2E or MSW-backed frontend tests when the changed model is on an active client flow
+
+Do not mark a backend slice done if any of those applicable layers are still intentionally stale.
+
+Model-change slices must also update the supporting test infrastructure that depends on the model shape, including:
+
+- Factories and builders
+- Repository mocks
+- Fixture creators
+- Route setup helpers
+- SDK/client setup helpers
+
+If a model change leaves any affected suite failing because those test-support layers are still shaped like the old model, the slice remains `In Progress`.
 
 ---
 
@@ -41,13 +61,21 @@ A backend slice that changes a domain model must update ALL applicable layers. D
 
 ### 5. Tests
 
-- [ ] Update service unit/integration tests
-- [ ] Update or add SDK functional API tests
-- [ ] Update smoke tests if changed field is on the critical deployment path
-- [ ] Update browser E2E if applicable
-- [ ] Remove/replace stale tests enforcing old architecture
-- [ ] Add DB CRUD coverage for new/redesigned domain objects (create, update, delete/inactivate, findById)
-- [ ] Add use-case-driven functional tests proving backend supports documented workflows
+- [ ] Update backend unit/data-integration tests
+- [ ] Update contract-verification suites
+- [ ] Update functional API tests if the changed field/shape is on a critical path
+- [ ] Update browser E2E or MSW handlers if request/response shape changed and those layers are active for the affected flow
+- [ ] Update factories, repository mocks, builders, fixture setup, and other test-support code that still assumes the retired model shape
+- [ ] Remove or replace stale tests that were enforcing old architecture
+- [ ] Add DB-backed CRUD coverage for new or materially redesigned domain objects, including `findById`
+- [ ] Add use-case-driven tests that prove the backend supports the documented workflows for the changed domain area
+
+### 5A. Test-Impact Rule for Model Changes
+
+- Any persisted field addition, removal, rename, or semantics change must trigger an impact sweep across unit, data integration, contract verification, FAPI, and active browser/MSW tests.
+- Treat failing test suites caused by stale model assumptions as part of the production slice, not post-merge cleanup.
+- Do not push a model change while knowingly leaving broken mocks, factories, or DB-backed tests that still reflect the old model.
+- If the affected suite list is not obvious, document the expected impacted files in the plan notes before marking the task `Done`.
 
 ---
 

@@ -54,6 +54,7 @@ Follow the slice completion checklist in `rules/workflow-rules.md` before markin
 - Do not skip tests. A slice without tests is `In Progress`, not `Done`.
 - Do not mix old and new domain terminology within the same slice.
 - Run the pre-commit self-review scan from `rules/service-rules.md` before committing.
+- When changing a domain model (field add/remove/rename, relationship change), sweep all affected test infrastructure: factories, builders, mocks, fixture creators, and setup helpers. Do not push while these are still shaped like the old model. See `rules/model-change-rules.md` §5A.
 
 ## What You Do NOT Do
 

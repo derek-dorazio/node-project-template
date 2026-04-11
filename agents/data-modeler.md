@@ -161,6 +161,17 @@ When the requirements don't make the model clear:
 - "Is [field] set once at creation, or can it change later?" (immutable vs mutable)
 - "Is [concept A] the same thing as [concept B], or are they different entities?" (deduplication)
 
+## Test Impact Awareness
+
+When proposing model changes (new fields, renamed fields, removed fields, changed relationships), call out the downstream test impact:
+
+- Which test factories, builders, and fixture creators assume the current model shape?
+- Which functional API tests exercise the changed fields?
+- Which data integration tests validate persistence for the affected entities?
+- Which contract-verification suites assert response shapes that will change?
+
+This does not mean the data modeler writes tests — but the model proposal should flag the blast radius so implementation agents know what to sweep. See `rules/model-change-rules.md` §5A for the full test-impact rule.
+
 ## What You Do NOT Do
 
 - You do not write code, Prisma schemas, or migrations.
