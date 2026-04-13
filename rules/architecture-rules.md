@@ -5,6 +5,7 @@ All plan documents and implementation work must conform to these rules. This is 
 **For implementation-level rules, see:**
 - **[Service Rules](service-rules.md)** — backend TypeScript, Fastify, Prisma, OpenAPI, DTO, and mapper rules
 - **[React UI Rules](react-ui-rules.md)** — React app technology, generated API client usage, TanStack Query, and frontend testing patterns
+- **[UX Rules](ux-rules.md)** — first-draft UX conventions, action hierarchy, state communication, accessibility
 - **[Testing Rules](testing-rules.md)** — unit, integration, functional API, smoke, and browser E2E rules
 - **[Workflow Rules](workflow-rules.md)** — spec-driven lifecycle, plan tracking, and rule maintenance
 

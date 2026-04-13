@@ -24,8 +24,9 @@ Before implementing any work, read and follow:
 2. **[Architecture Rules](architecture-rules.md)** — tech stack, contract-first API design, service topology, project structure
 3. **[Service Rules](service-rules.md)** — backend TypeScript, Fastify, Prisma, DTOs, mappers, OpenAPI, error handling
 4. **[React UI Rules](react-ui-rules.md)** — React app technology, generated API client usage, state management, frontend testing
-5. **[Testing Rules](testing-rules.md)** — unit, integration, functional API, smoke, E2E, and contract testing strategy
-6. **[Model Change Rules](model-change-rules.md)** — definition of done when domain models change
+5. **[UX Rules](ux-rules.md)** — first-draft UX conventions, action hierarchy, state communication, accessibility
+6. **[Testing Rules](testing-rules.md)** — unit, integration, functional API, smoke, E2E, and contract testing strategy
+7. **[Model Change Rules](model-change-rules.md)** — definition of done when domain models change
 
 ## Persona Playbooks
 

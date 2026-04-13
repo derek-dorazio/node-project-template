@@ -121,6 +121,7 @@ Before marking any backend slice task `Done`, verify each applicable item:
 - [ ] Every route uses `zodToJsonSchema()` — no inline JSON objects
 - [ ] No route uses placeholder schemas for endpoints returning domain data
 - [ ] Every route has `operationId`, `summary`, and `tags`
+- [ ] Changed backend/shared contract work also satisfies the contract-documentation checklist from `rules/service-rules.md`
 
 **Tests:**
 - [ ] Unit test exists for service logic
@@ -133,6 +134,13 @@ Before marking any backend slice task `Done`, verify each applicable item:
 - [ ] `npm run api:validate` succeeds
 
 A slice that lands the schema and service logic but skips DTOs, mappers, or tests is `In Progress`, not `Done`.
+
+For backend/shared contract slices, "complete" also means the documentation surface is complete enough for frontend consumption:
+
+- Route descriptions are updated where behavior is not obvious.
+- DTO/object descriptions exist for changed payloads.
+- Field semantics are described where names alone are not enough.
+- Any backend explanation that frontend needed has been pushed back into the contract source instead of left as one-off tribal knowledge.
 
 ### Slice Deliverables
 
@@ -216,7 +224,7 @@ Do not assume that an early scaffold or placeholder page defines the final produ
 
 ## 8. Persona Playbooks
 
-- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, project management, backend implementation, frontend implementation, architecture/platform work, and code review.
+- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, project management, data modeling, backend implementation, frontend implementation, architecture/platform work, and code review.
 - These playbooks are execution aids, not replacement policy sources.
 - `AGENTS.md` and `rules/` remain canonical.
 - Cross-cutting workflow requirements remain mandatory for all personas, including:
@@ -225,6 +233,26 @@ Do not assume that an early scaffold or placeholder page defines the final produ
   - Validating work before marking slices done
   - Updating docs and rules when the change affects them
 - The `project-manager` persona may help with plan shaping, sequencing, and progress reconciliation, but it is not the sole owner of task tracking. Agents doing implementation work must still update plans themselves.
+
+### Frontend / Data Model / Backend Handoff Rules
+
+- Frontend implementation should normally work from:
+  - reviewed plans and use-case companions
+  - generated SDK operations
+  - generated request/response types
+  - documented OpenAPI summaries/descriptions
+- Frontend agents must not answer contract ambiguity by treating backend implementation code as the working spec.
+- If frontend work reveals a possible shared-contract, DTO, or model change, stop and route that question through the `data-modeler` persona first unless the change is already explicitly reviewed and obviously backend-owned.
+- The `data-modeler` persona classifies whether the request is:
+  - UI-only
+  - contract-only
+  - a real model/domain/persistence change
+- If the change is not obvious and clear from the reviewed plan, confirm the backend/model implication with the user before implementation continues.
+- Backend/shared changes discovered during frontend work must be implemented by the backend developer persona, not by the frontend developer persona.
+- If the frontend developer has a contract question, ask the backend developer persona for the answer instead of reading backend code directly.
+- When such a question reveals a contract documentation gap, the backend developer must fix that documentation gap as part of the handoff, not merely answer the question once.
+- Backend slices that change API contracts must include that documentation-gap repair in the same slice rather than leaving it as follow-up cleanup.
+- Product ambiguity belongs with the user. Contract ambiguity belongs with the backend developer. Model-impact classification belongs with the data-modeler.
 
 ---
 

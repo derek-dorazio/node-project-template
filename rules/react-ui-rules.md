@@ -42,11 +42,14 @@ const { data, error } = await listLeagues({ client });
 
 The `@/lib/api` module configures the SDK client (base URL, auth interceptor) and re-exports all generated operations.
 
+Treat the generated SDK/types plus documented OpenAPI behavior as the normal frontend contract source of truth. Do not read backend service code to answer routine contract questions.
+
 ### Banned Patterns
 
 - New manual `fetch()` wrappers for endpoints in the generated client
 - New OpenAPI client adapters when the generated one exists
 - Local interfaces duplicating generated response types
+- Treating backend service code as the normal way to answer frontend contract questions
 - `as any` / `as unknown as` / manual shape rewriting to force generated types
 - Legacy manual-client helpers alongside the generated SDK
 

@@ -67,7 +67,7 @@ For every API endpoint:
 1. Define or update the DTO Zod schema in the shared `dto/` package.
 2. Map domain/service results to that DTO in the `mappers/` directory.
 3. Use `zodToJsonSchema()` in the Fastify route schema for request/response payloads.
-4. Provide `tags`, `summary`, and unique `operationId`.
+4. Provide `tags`, `summary`, descriptive endpoint documentation, and unique `operationId`.
 5. Regenerate and validate the shared OpenAPI/client artifacts.
 
 ### Mapper File Requirement
@@ -84,9 +84,43 @@ Every route must include:
 
 - `tags`
 - `summary`
+- `description` when the endpoint behavior, audience, or lifecycle context is not obvious from the path and summary alone
 - `operationId`
 - Request schema where applicable (`body`, `params`, `querystring`)
 - `response` schema for every supported status returned by the handler
+
+### Contract Documentation Requirement
+
+Backend-owned API contracts must be documented well enough that frontend implementation can normally work from the generated SDK/types and OpenAPI docs without reading backend service code.
+
+That means:
+
+- Add meaningful route summaries, descriptions, and tags.
+- Document DTO/object purpose when the type name alone is insufficient.
+- Document field meaning when a consumer could plausibly misread semantics.
+- Document enums/status values when names alone do not explain lifecycle or behavior.
+
+If a frontend question reveals that the contract meaning was not clear from the documented API surface, treat that as a backend documentation defect and fix it in the contract source.
+
+### Contract Documentation Checklist
+
+Before finishing backend/shared contract work, explicitly verify:
+
+1. Every changed route still has:
+   - `tags`
+   - `summary`
+   - `operationId`
+   - `description` when behavior, audience, lifecycle, or permissions are not obvious from the path and summary alone
+2. Every changed request and response schema in the shared `dto/` package has:
+   - An object-level description when the schema represents a meaningful payload or DTO
+   - Field descriptions for any property whose semantics are not unmistakable from its name alone
+3. Any changed enum, status, lifecycle value, or role exposed to clients is documented when the value names alone do not explain how the client should interpret them.
+4. Any frontend question that required backend explanation is either:
+   - Now answered by the documented contract source, or
+   - Escalated as a product ambiguity rather than left as tribal knowledge.
+5. `npm run api:refresh` has been rerun after contract changes, and the generated artifacts still reflect the improved descriptions.
+
+Do not treat contract documentation as optional polish after the code is correct. For backend/shared API work, documentation completeness is part of the definition of done.
 
 ### Response Rules
 
@@ -199,6 +233,7 @@ Before finishing backend API work, verify:
 5. Does `npm run api:validate` succeed?
 6. Did generated files update as expected?
 7. Do SDK functional tests cover the changed endpoints?
+8. Did changed routes and DTOs pass the Contract Documentation Checklist above?
 
 ---
 
