@@ -258,7 +258,8 @@ Current persona nickname map:
 | Product Manager | Pam | Product/use-case clarification and review |
 | Project Manager | Parker | Plan shaping, sequencing, and reconciliation |
 | Architect | Archie | Cross-cutting architecture and platform work |
-| QA Test Analyst | Quinn | Test case derivation, coverage audits, test infrastructure health |
+| Test Planner | Tess | Test case derivation from specs, test matrix, coverage audits |
+| QA/Test Engineer | Quinn | Verification lane selection, test execution, failure triage, release confidence |
 | Code Reviewer | Riley | Findings-first code review and risk detection |
 
 - Cross-cutting workflow requirements remain mandatory for all personas, including:

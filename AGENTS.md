@@ -41,7 +41,8 @@ The `agents/` directory contains role-scoped playbooks for common kinds of work:
 - `agents/architect.md` — design plans, execution slices, CI/CD, infrastructure
 - `agents/backend-developer.md` — service implementation, DTOs, mappers, backend tests
 - `agents/frontend-developer.md` — React app implementation, SDK consumption, frontend tests
-- `agents/qa-test-analyst.md` — test case derivation from specs, coverage audits, test infrastructure health
+- `agents/test-planner.md` — test case derivation from specs, test matrix, coverage audits
+- `agents/qa-test-analyst.md` — verification lane selection, test execution, failure triage, release confidence
 - `agents/code-reviewer.md` — review passes, findings tables, acceptance decisions
 
 Use these playbooks to focus the workflow for that role.
