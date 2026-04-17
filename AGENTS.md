@@ -32,9 +32,10 @@ Before implementing any work, read and follow:
 
 The `agents/` directory contains role-scoped playbooks for common kinds of work:
 
-- `agents/product-manager.md` — requirements discovery, use-case design, UX flow review
+- `agents/product-manager.md` — product requirements, use cases, screens, business rules, glossary
+- `agents/technical-specification-creator.md` — feature-level tech specs: domain model, API surface, flows
+- `agents/data-modeler.md` — domain model derivation, fields/constraints, state machines, convention enforcement
 - `agents/project-manager.md` — slicing work, sequencing, plan reconciliation
-- `agents/data-modeler.md` — domain model derivation, Mermaid diagrams, data dictionaries
 - `agents/architect.md` — design plans, execution slices, CI/CD, infrastructure
 - `agents/backend-developer.md` — service implementation, DTOs, mappers, backend tests
 - `agents/frontend-developer.md` — React app implementation, SDK consumption, frontend tests
@@ -50,7 +51,7 @@ Important:
 
 ## Workflow Expectations
 
-- Follow the spec-driven lifecycle: Requirements → Domain Model → Use Cases → Design Plans → Execution Plans → Implementation.
+- Follow the spec-driven lifecycle: Requirements (Pam) → Technical Specification (Tom + Dom) → Design Plans (Archie) → Execution Plans (Archie) → Implementation (Brad, Fran).
 - Track work through plan task tables. Mark tasks `In Progress` when starting, `Done` when all layers are complete.
 - Do not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.
 - Update every affected plan when finishing work.
@@ -87,7 +88,10 @@ CI-only follow-up signals (not required pre-push):
 │   ├── integration/       # DB-backed integration tests (Fastify inject)
 │   ├── functional/        # SDK functional API tests (full-stack through generated client)
 │   └── api/               # Deployed smoke tests (thin health/auth verification)
-├── plans/                 # Spec documents, design plans, execution plans
+├── requirements/          # Pam's product requirements (product-level + per-feature)
+├── tech-specs/            # Tom's technical specifications (per-feature)
+├── plans/                 # Design plans, execution plans, task tables
 ├── rules/                 # Architecture, service, testing, workflow rules
+├── agents/                # Persona playbooks (Pam, Tom, Dom, Archie, etc.)
 └── infrastructure/        # Docker, Terraform, CI/CD configuration
 ```

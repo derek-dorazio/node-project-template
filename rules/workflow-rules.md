@@ -14,18 +14,29 @@ Before any design or implementation:
 
 Deliverables: requirements document, domain model diagram or description, module map.
 
-### Phase 2: Use Cases
+### Phase 2: Product Requirements and Use Cases (Pam)
 
-For each module or feature area:
+Pam iterates with the project owner to produce the `requirements/` bundle:
 
-1. **Write use-case companions** — document concrete user journeys: who does what, in what order, what they see, what can go wrong.
-2. **Identify roles and permissions** — which actors can perform which actions.
-3. **Identify business rules** — validation, uniqueness, lifecycle constraints, authorization boundaries.
-4. **Identify deferred scope** — explicitly state what is out of scope for the current phase.
+1. **Product-level:** `product-requirements.md`, `roles-and-actors.md`, `glossary.md`, `domain-concepts.md`, `navigation-and-entry-points.md`.
+2. **Per feature:** `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
+3. Every use case follows the structured template with alternate flows, error paths, acceptance criteria, and confidence labels.
 
-Deliverables: use-case companion documents per module, stored in `plans/`.
+Deliverables: `requirements/` bundle per the handoff floor defined in `agents/product-manager.md`.
 
 **Rule: Agents must not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.**
+
+### Phase 2.5: Technical Specification (Tom + Dom)
+
+Tom converts Pam's confirmed requirements into a feature-level technical specification:
+
+1. **Domain model** (Dom) — entities with fields table, relationships, state machines, invariants.
+2. **API surface** — route inventory with methods, DTOs, allowed roles, notable errors.
+3. **Flows** — technical sequence per use case: screen → API → service → persistence.
+
+Deliverables: `tech-specs/features/<feature-slug>/` per the handoff floor defined in `agents/technical-specification-creator.md`.
+
+Tom is invoked automatically (JIT) when requirements exist but tech-specs don't — the human does not need to explicitly trigger this phase.
 
 ### Phase 3: Design Plans
 
@@ -229,7 +240,7 @@ For browser-E2E planning, prefer real user/role lifecycle flows over root-admin 
 
 ## 8. Persona Playbooks
 
-- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, project management, data modeling, backend implementation, frontend implementation, architecture/platform work, and code review.
+- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, technical specification, data modeling, project management, backend implementation, frontend implementation, architecture/platform work, and code review.
 - These playbooks are execution aids, not replacement policy sources.
 - `AGENTS.md` and `rules/` remain canonical.
 - Formal persona names remain the canonical workflow language in plans, rules, and handoffs. Nicknames are optional shorthand for prompts, logs, worker updates, and conversational references.
@@ -240,6 +251,7 @@ Current persona nickname map:
 
 | Formal Persona | Nickname | Notes |
 |---|---|---|
+| Technical Specification Creator | Tom | Converts product requirements into feature-level technical specifications with Dom |
 | Data Modeler | Dom | Model and contract impact classification |
 | Backend Developer | Brad | Service, DTO, OpenAPI, and test implementation |
 | Frontend Developer | Fran | Web UI and browser-flow delivery |
