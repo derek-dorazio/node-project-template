@@ -17,7 +17,8 @@ Pam and Tom personas have been implemented. Items marked *(future)* are proposed
 | Project Manager | `Parker` | Active | Slicing, sequencing, plan reconciliation |
 | Backend Developer | `Brad` | Active | Service, DTOs, mappers, routes, backend tests |
 | Frontend Developer | `Fran` | Active | React pages, hooks, components, frontend tests |
-| Code Reviewer | `Riley` | Active | Rule/plan/use-case audits |
+| QA Test Analyst | `Quinn` | Active | Test case derivation, coverage audits, test infrastructure health |
+| Code Reviewer | `Riley` | Active | Code quality, rule compliance, architectural correctness |
 
 Formal names remain canonical in plans and rules. Nicknames are shorthand only.
 
@@ -37,17 +38,24 @@ flowchart TD
     Parker[Parker — Project Manager]
     Brad[Brad — Backend Developer]
     Fran[Fran — Frontend Developer]
+    Quinn[Quinn — QA Test Analyst]
     Riley[Riley — Code Reviewer]
 
     Owner -- vision, questions, sign-off --> Pam
     Pam -- requirements/ bundle --> Tom
     Tom <-- domain model iteration --> Dom
+    Tom -- tech-specs/ bundle --> Quinn
     Tom -- tech-specs/ bundle --> Archie
     Pam -- requirements/ bundle --> Archie
+    Quinn -- test matrix --> Brad
+    Quinn -- test matrix --> Fran
     Archie -- plans/ --> Parker
     Parker -- sliced plan rows --> Brad
     Parker -- sliced plan rows --> Fran
     Brad -- regenerated SDK + contract docs --> Fran
+    Brad -- code for review --> Quinn
+    Fran -- code for review --> Quinn
+    Quinn -- coverage audit --> Riley
     Brad -- code for review --> Riley
     Fran -- code for review --> Riley
     Riley -. findings .-> Brad
@@ -275,7 +283,21 @@ project-root/
   - *(future)* Slice summary, contract-question artifacts, frontend registry updates.
 - **Handoff criteria:** does not begin until the SDK/types for the slice actually exist; frontend review checklist satisfied.
 
-### 4.8 Riley — Code Reviewer
+### 4.8 Quinn — QA Test Analyst
+
+- **Role:** Derive test cases from specs, audit test coverage after implementation, maintain test infrastructure health.
+- **Inputs:**
+  - Pam's `use-cases.md`, `screens.md`, `business-rules.md`.
+  - Tom's `api-surface.md`, `flows.md`.
+  - Implemented test suites from Brad and Fran.
+- **Outputs:**
+  - `tech-specs/features/<feature>/test-matrix.md` — derived test cases with layer, scenario, positive/negative, and coverage status.
+  - Coverage audit findings table after implementation.
+  - Test infrastructure health findings after model/contract changes.
+- **Handoff criteria:** test matrix derived before or alongside implementation; coverage audit completed before Riley's code review; all findings routed to Brad or Fran.
+- **Does not produce:** tests, production code, product decisions.
+
+### 4.9 Riley — Code Reviewer
 
 - **Role:** Audit implementation against rules, plans, and use cases.
 - **Inputs:**
@@ -302,6 +324,10 @@ project-root/
 | Parker | Brad / Fran | Sliced plan rows | Slices independently committable; dependencies declared |
 | Brad | Fran | Regenerated SDK + contract docs | SDK exported; contract-documentation checklist satisfied |
 | Fran | Brad | Contract question | Cites what docs say; proposes doc addition |
+| Tom | Quinn | `tech-specs/` bundle | Tech spec complete; Quinn derives test matrix |
+| Quinn | Brad / Fran | Test matrix | Test cases derived from specs; developers know what to test |
+| Brad / Fran | Quinn | Implemented tests | Quinn audits coverage against test matrix |
+| Quinn | Riley | Coverage audit | Test gaps flagged; coverage verified |
 | Brad / Fran | Riley | Code for review | Slice-completion checklist satisfied |
 | Riley | Brad / Fran | Findings table | Each finding resolved or explicitly accepted |
 
@@ -313,6 +339,7 @@ project-root/
 - **Technical contract question** (endpoint shape, schema, state machine) → `Tom` during spec; `Brad` during and after implementation.
 - **Implementation question** (how to build in the stack) → `Brad` / `Fran` / `Archie` by layer.
 - **Model-impact classification** (does this change the domain model?) → `Dom`.
+- **Test completeness question** (is this use case / error path / screen state tested?) → `Quinn`.
 - *(future)* **Operational question** (how does this run in prod) → `Archie` primarily.
 - *(future)* **Handoff gap** (doc missing, runbook missing) → `Riley` flags; originating persona fixes.
 
