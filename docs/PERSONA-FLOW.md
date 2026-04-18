@@ -2,8 +2,6 @@
 
 This document describes the end-to-end flow through the agent personas, from a product idea to shipped code.
 
-Pam and Tom personas have been implemented. Items marked *(future)* are proposed in `plans/02-pam-to-tom-requirements-flow.md` and `plans/03-archie-brad-fran-handoff-review.md`. Plan 05 (`plans/05-engineer-driven-jit-workflow.md`) describes an alternative entry point for engineer-driven work.
-
 ---
 
 ## 1. Persona Roster
@@ -73,15 +71,18 @@ flowchart TD
 
 ### 2.2 Mode B — Vision Plus Visual Artifacts
 
-Identical to Mode A except Pam performs a visual-extraction pass first, using the artifacts as anchors for `screens.md` and `navigation-and-entry-points.md` before targeted conversation.
+Identical to Mode A except Pam performs a visual-extraction pass first, using the artifacts as anchors for `screens.md` and `navigation-and-entry-points.md` before targeted conversation. Piper may still precede Pam if the overall product shape needs framing first.
 
 ```mermaid
 flowchart TD
     Owner([Human Product Owner])
     Visuals[/Screenshots / Figma / Wireframes/]
+    Piper[Piper — Product Discovery]
     Pam[Pam — Product Manager]
     Downstream[... Tom, Dom, Archie, Parker, Brad, Fran, Riley ...]
 
+    Owner -- kickoff / seed materials --> Piper
+    Piper -- product-overview/ bundle --> Pam
     Owner --> Pam
     Visuals -- visual extraction pass --> Pam
     Pam -- targeted questions --> Owner
@@ -90,7 +91,7 @@ flowchart TD
 
 The rest of the flow is identical to Mode A.
 
-### 2.3 Engineer-Driven JIT Flow (Plan 05)
+### 2.3 Engineer-Driven JIT Flow
 
 A Principal Software Engineer (PSE) has requirements in hand and wants to go straight to building. Agents auto-sequence the missing phases.
 
@@ -124,7 +125,7 @@ flowchart TD
     Fran --> Riley
 ```
 
-See `plans/05-engineer-driven-jit-workflow.md` for the Archie gate criteria and specs-track-code rules.
+Archie is required for cross-cutting changes (new service, infra, auth, breaking migration); optional for in-boundary features.
 
 ---
 
@@ -140,18 +141,19 @@ project-root/
 │   │   ├── actors.md                          # Primary actors and high-level goals
 │   │   ├── module-overview.md                 # Major modules / feature areas
 │   │   └── open-questions.md                  # Open discovery questions for Pam
-│   ├── product-requirements.md                # Pam: product purpose, users, non-goals
-│   ├── roles-and-actors.md                    # Pam: actor definitions, capability matrix
-│   ├── glossary.md                            # Pam: canonical terms, UI ↔ model mappings
-│   ├── domain-concepts.md                     # Pam: entities, relationships, lifecycle (prose)
-│   ├── navigation-and-entry-points.md         # Pam: global nav, entry points, page inventory
-│   └── features/                              # Pam: per-feature requirement bundles
-│       └── <feature-slug>/
-│           ├── overview.md                    # Purpose, actors, capabilities, deferred scope
-│           ├── use-cases.md                   # Structured use cases with alt/error/acceptance
-│           ├── screens.md                     # Screen purposes, roles, actions, states
-│           ├── business-rules.md              # Validation, uniqueness, lifecycle, auth rules
-│           └── open-questions.md              # Confirmed Drift / Needs Review / Deferred
+│   └── product-requirements/                  # Pam's output
+│       ├── product-requirements.md            # Product purpose, users, non-goals
+│       ├── roles-and-actors.md                # Actor definitions, capability matrix
+│       ├── glossary.md                        # Canonical terms, UI ↔ model mappings
+│       ├── domain-concepts.md                 # Entities, relationships, lifecycle (prose)
+│       ├── navigation-and-entry-points.md     # Global nav, entry points, page inventory
+│       └── features/
+│           └── <feature-slug>/
+│               ├── overview.md                # Purpose, actors, capabilities, deferred scope
+│               ├── use-cases.md               # Structured use cases with alt/error/acceptance
+│               ├── screens.md                 # Screen purposes, roles, actions, states
+│               ├── business-rules.md          # Validation, uniqueness, lifecycle, auth rules
+│               └── open-questions.md          # Confirmed Drift / Needs Review / Deferred
 │
 ├── tech-specs/                                # Tom's output
 │   └── features/
@@ -167,9 +169,9 @@ project-root/
 │
 ├── docs/                                      # Evergreen reference docs
 │   ├── PERSONA-FLOW.md                        # This document
+│   ├── SESSION-HANDOFF.md                     # Active "resume here" note (updated at session close)
 │   ├── DATABASE-SCHEMA.md                     # Archie: target schema reference
-│   ├── PROJECT-SETUP.md                       # Developer setup guide
-│   └── ...
+│   └── PROJECT-SETUP.md                       # Developer setup guide
 │
 ├── agents/                                    # Persona playbooks
 │   ├── product-discovery.md                   # Piper
@@ -180,10 +182,16 @@ project-root/
 │   ├── project-manager.md                     # Parker
 │   ├── backend-developer.md                   # Brad
 │   ├── frontend-developer.md                  # Fran
+│   ├── test-planner.md                        # Tess
+│   ├── qa-test-analyst.md                     # Quinn
 │   └── code-reviewer.md                       # Riley
 │
 ├── rules/                                     # Canonical rules
 │   ├── workflow-rules.md
+│   ├── working-style.md
+│   ├── product-discovery-rules.md
+│   ├── product-requirements-rules.md
+│   ├── technical-specification-rules.md
 │   ├── architecture-rules.md
 │   ├── service-rules.md
 │   ├── react-ui-rules.md
@@ -218,10 +226,11 @@ project-root/
 - **Role:** Iteratively define product intent with the human owner.
 - **Inputs:**
   - Owner's vision and domain knowledge.
+  - Piper's `requirements/product-overview/` bundle when discovery has already run.
   - (Mode B) visual artifacts — screenshots, wireframes, Figma frames.
-- **Outputs** (`requirements/`):
+- **Outputs** (`requirements/product-requirements/`):
   - Product-level: `product-requirements.md`, `roles-and-actors.md`, `glossary.md`, `domain-concepts.md`, `navigation-and-entry-points.md`.
-  - Per feature: `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
+  - Per feature (`features/<feature-slug>/`): `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
 - **Use case template:** Actor, Goal, Confidence label, Preconditions, Normal flow, Alternate flows, Error paths, Postconditions, Acceptance criteria, Business rules referenced.
 - **Confidence labels:** `(Confirmed)` / `(Inferred)` / `(Needs Review)` on every use case, screen, and business rule.
 - **Handoff criteria:** all files exist; every item labeled; no unclassified open questions; owner signed off end-to-end; cross-feature references linked.
@@ -393,20 +402,18 @@ project-root/
 
 | Artifact | Owner | Status |
 |---|---|---|
+| `requirements/product-overview/` | Piper | Active — discovery inputs for Pam |
 | `requirements/` | Pam | Active — canonical product requirements |
 | `tech-specs/` | Tom + Dom | Active — canonical technical specifications |
 | `plans/` | Archie + Parker | Active — design plans and task tables |
+| `docs/SESSION-HANDOFF.md` | All | Active — updated at session close; read at session resume |
 | `docs/DATABASE-SCHEMA.md` | Archie | Active |
-| `docs/ARCHITECTURE.md` | Archie | *(future — Plan 03)* |
-| `docs/INFRASTRUCTURE.md` | Archie | *(future — Plan 03)* |
-| `docs/adr/` | Archie | *(future — Plan 03)* |
-| `docs/FEATURE-FLAGS.md` | Brad | *(future — Plan 03)* |
-| `docs/RUNBOOKS/` | Brad | *(future — Plan 03)* |
-| `docs/frontend/COMPONENT-INVENTORY.md` | Fran | *(future — Plan 03)* |
-| `docs/frontend/ANALYTICS-EVENTS.md` | Fran | *(future — Plan 03)* |
-| `docs/frontend/ACCESSIBILITY.md` | Fran | *(future — Plan 03)* |
-| `docs/DEPLOYMENT-READINESS.md` | Archie | *(future — Plan 03)* |
-| `CHANGELOG.md` | Archie or Riley | *(future — Plan 03)* |
+| `docs/ARCHITECTURE.md` | Archie | *(future)* |
+| `docs/INFRASTRUCTURE.md` | Archie | *(future)* |
+| `docs/adr/` | Archie | *(future)* |
+| `docs/FEATURE-FLAGS.md` | Brad | *(future)* |
+| `docs/RUNBOOKS/` | Brad | *(future)* |
+| `CHANGELOG.md` | Archie or Riley | *(future)* |
 
 ---
 
@@ -420,8 +427,10 @@ project-root/
 - Dom operates as Tom's subagent during greenfield; existing mid-implementation impact classification is unchanged.
 - Archie, Parker, Brad, Fran, and Riley continue using their current persona files with no new output requirements.
 
-**Next (Plans 02, 03, and 05 — after pilot):**
+**Future:**
 
-- Plan 02: Tom project-level outputs (consolidated domain model, error envelope, auth model, integration notes). Dedicated rule files for product requirements and technical specifications.
-- Plan 03: Archie ADRs and current-state docs. Brad slice summaries, contract examples, migration runbooks, feature-flag inventory, operational runbooks. Fran contract-question format, slice summary, frontend registries. Riley handoff-completeness scope.
-- Plan 05: JIT specification trigger, Archie gate, specs-track-code rule, post-implementation reconciliation. Formal workflow-rules additions.
+- Archie ADRs and current-state docs (`docs/ARCHITECTURE.md`, `docs/INFRASTRUCTURE.md`, `docs/adr/`).
+- Brad slice summaries, contract examples, migration runbooks, feature-flag inventory, and operational runbooks.
+- Fran contract-question format, slice summary, and frontend registries.
+- Riley handoff-completeness review scope.
+- Tom project-level outputs (consolidated domain model, error envelope, auth model).

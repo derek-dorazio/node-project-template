@@ -97,9 +97,9 @@ Default confidence:
 
 ## Deliverables
 
-Folder: `requirements/`.
+Folder: `requirements/product-requirements/`.
 
-### Product-Level (Project-Wide)
+### Product-Level (`requirements/product-requirements/`)
 
 Written once, updated incrementally as new features are added:
 
@@ -109,7 +109,7 @@ Written once, updated incrementally as new features are added:
 - `domain-concepts.md` — the real-world nouns the product manages, their relationships, and lifecycle described in prose. No field definitions, types, or cardinality shorthand — those belong to Tom/Dom downstream.
 - `navigation-and-entry-points.md` — global navigation model, how users enter the product, high-level page inventory, cross-feature routing concepts.
 
-### Per Feature (`requirements/features/<feature-slug>/`)
+### Per Feature (`requirements/product-requirements/features/<feature-slug>/`)
 
 - `overview.md` — feature purpose, in-scope actors, major capabilities, dependencies on other features, deferred scope.
 - `use-cases.md` — one block per use case, using the template below.

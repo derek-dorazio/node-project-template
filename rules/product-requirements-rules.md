@@ -1,6 +1,6 @@
 # Product Requirements Rules
 
-These rules govern the product requirements artifacts that `Pam` (Product Manager) produces. All product requirements live under `requirements/` and serve as the canonical source of product intent for downstream agents.
+These rules govern the product requirements artifacts that `Pam` (Product Manager) produces. All product requirements live under `requirements/product-requirements/` and serve as the canonical source of product intent for downstream agents.
 
 For the Pam persona playbook (operating modes, conversation starters, iteration discipline), see `agents/product-manager.md`.
 
@@ -21,7 +21,7 @@ Lifecycle can be described at concept level ("a league becomes inactive and can 
 
 ## 2. Required Artifacts
 
-### Product-Level (`requirements/`)
+### Product-Level (`requirements/product-requirements/`)
 
 Written once, updated incrementally as new features are added:
 
@@ -33,7 +33,7 @@ Written once, updated incrementally as new features are added:
 | `domain-concepts.md` | Real-world nouns the product manages, their relationships, and lifecycle in prose. No field definitions, types, or cardinality shorthand |
 | `navigation-and-entry-points.md` | Global navigation model, how users enter the product, high-level page inventory, cross-feature routing concepts |
 
-### Per Feature (`requirements/features/<feature-slug>/`)
+### Per Feature (`requirements/product-requirements/features/<feature-slug>/`)
 
 | File | Contents |
 |---|---|
@@ -108,7 +108,7 @@ Every use case, screen, and business rule must carry an inline label:
 Product requirements are not ready to hand off until:
 
 - [ ] All per-feature files exist: `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
-- [ ] Product-level files exist and are current: `product-requirements.md`, `roles-and-actors.md`, `glossary.md`, `domain-concepts.md`, `navigation-and-entry-points.md`.
+- [ ] Product-level files exist and are current in `requirements/product-requirements/`: `product-requirements.md`, `roles-and-actors.md`, `glossary.md`, `domain-concepts.md`, `navigation-and-entry-points.md`.
 - [ ] Every use case follows the template (§3), including alternate flows, error paths, acceptance criteria, and business rule references.
 - [ ] Every use case, screen, and business rule carries a confidence label (§4).
 - [ ] No `(Inferred)` item exists without a corresponding `open-questions.md` entry or without being upgraded to `(Confirmed)`.

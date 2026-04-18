@@ -97,7 +97,10 @@ CI-only follow-up signals (not required pre-push):
 │   ├── integration/       # DB-backed integration tests (Fastify inject)
 │   ├── functional/        # SDK functional API tests (full-stack through generated client)
 │   └── api/               # Deployed smoke tests (thin health/auth verification)
-├── requirements/          # Pam's product requirements (product-level + per-feature)
+├── requirements/
+│   ├── reference/         # Seed discovery materials
+│   ├── product-overview/  # Piper's discovery artifacts
+│   └── product-requirements/ # Pam's refined product requirements
 ├── tech-specs/            # Tom's technical specifications (per-feature)
 ├── plans/                 # Design plans, execution plans, task tables
 ├── rules/                 # Architecture, service, testing, workflow rules

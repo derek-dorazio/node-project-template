@@ -24,13 +24,13 @@ Deliverables: requirements document, domain model diagram or description, module
 
 ### Phase 2: Product Requirements and Use Cases (Pam)
 
-Pam iterates with the project owner to produce the `requirements/` bundle:
+Pam iterates with the project owner to produce the `requirements/product-requirements/` bundle:
 
 1. **Product-level:** `product-requirements.md`, `roles-and-actors.md`, `glossary.md`, `domain-concepts.md`, `navigation-and-entry-points.md`.
-2. **Per feature:** `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
+2. **Per feature (`features/<feature-slug>/`):** `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
 3. Every use case follows the structured template with alternate flows, error paths, acceptance criteria, and confidence labels.
 
-Deliverables: `requirements/` bundle per the handoff floor defined in `agents/product-manager.md`.
+Deliverables: `requirements/product-requirements/` bundle per the handoff floor defined in `agents/product-manager.md`.
 
 **Rule: Agents must not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.**
 
