@@ -10,6 +10,7 @@ Pam and Tom personas have been implemented. Items marked *(future)* are proposed
 
 | Persona | Nickname | Status | Scope |
 |---|---|---|---|
+| Product Discovery | `Piper` | Active | Broad product framing, PRD shaping, actor/module identification, discovery handoff |
 | Product Manager | `Pam` | Active | Product intent: requirements, use cases, roles, glossary, screens, business rules |
 | Technical Specification Creator | `Tom` | Active | Feature-level tech spec: domain model, API surface, flows; orchestrates `Dom` |
 | Data Modeler | `Dom` | Active | Domain model: entities, fields, constraints, state machines, convention enforcement |
@@ -32,6 +33,7 @@ Formal names remain canonical in plans and rules. Nicknames are shorthand only.
 ```mermaid
 flowchart TD
     Owner([Human Product Owner])
+    Piper[Piper — Product Discovery]
     Pam[Pam — Product Manager]
     Tom[Tom — Tech Spec Creator]
     Dom[Dom — Data Modeler]
@@ -43,6 +45,8 @@ flowchart TD
     Quinn[Quinn — QA Engineer]
     Riley[Riley — Code Reviewer]
 
+    Owner -- kickoff / seed materials --> Piper
+    Piper -- product-overview/ bundle --> Pam
     Owner -- vision, questions, sign-off --> Pam
     Pam -- requirements/ bundle --> Tom
     Tom <-- domain model iteration --> Dom
@@ -128,13 +132,20 @@ See `plans/05-engineer-driven-jit-workflow.md` for the Archie gate criteria and 
 
 ```
 project-root/
-├── requirements/                              # Pam's output
-│   ├── product-requirements.md                # Product purpose, users, non-goals
-│   ├── roles-and-actors.md                    # Actor definitions, capability matrix
-│   ├── glossary.md                            # Canonical terms, UI ↔ model mappings
-│   ├── domain-concepts.md                     # Entities, relationships, lifecycle (prose)
-│   ├── navigation-and-entry-points.md         # Global nav, entry points, page inventory
-│   └── features/
+├── requirements/
+│   ├── reference/                             # Seed discovery materials (screenshots, notes)
+│   ├── product-overview/                      # Piper's output
+│   │   ├── product-overview.md                # Broad product shape and purpose
+│   │   ├── prd.md                             # PRD-level summary
+│   │   ├── actors.md                          # Primary actors and high-level goals
+│   │   ├── module-overview.md                 # Major modules / feature areas
+│   │   └── open-questions.md                  # Open discovery questions for Pam
+│   ├── product-requirements.md                # Pam: product purpose, users, non-goals
+│   ├── roles-and-actors.md                    # Pam: actor definitions, capability matrix
+│   ├── glossary.md                            # Pam: canonical terms, UI ↔ model mappings
+│   ├── domain-concepts.md                     # Pam: entities, relationships, lifecycle (prose)
+│   ├── navigation-and-entry-points.md         # Pam: global nav, entry points, page inventory
+│   └── features/                              # Pam: per-feature requirement bundles
 │       └── <feature-slug>/
 │           ├── overview.md                    # Purpose, actors, capabilities, deferred scope
 │           ├── use-cases.md                   # Structured use cases with alt/error/acceptance
@@ -161,6 +172,7 @@ project-root/
 │   └── ...
 │
 ├── agents/                                    # Persona playbooks
+│   ├── product-discovery.md                   # Piper
 │   ├── product-manager.md                     # Pam
 │   ├── technical-specification-creator.md     # Tom
 │   ├── data-modeler.md                        # Dom
@@ -189,6 +201,17 @@ project-root/
 ---
 
 ## 4. Per-Persona Role, Inputs, Outputs
+
+### 4.0 Piper — Product Discovery
+
+- **Role:** Frame the product broadly before Pam begins detailed requirements work.
+- **Inputs:**
+  - Owner's kickoff prompt or rough idea.
+  - (Mode B) seed materials in `requirements/reference/` — screenshots, notes, rough docs.
+- **Outputs** (`requirements/product-overview/`):
+  - `product-overview.md`, `prd.md`, `actors.md`, `module-overview.md`, `open-questions.md`.
+- **Handoff criteria:** product purpose clear; primary actors identified; major modules/feature areas named; key constraints captured; open questions listed.
+- **Does not produce:** detailed use cases, screen-by-screen flows, schema, API contracts, implementation plans.
 
 ### 4.1 Pam — Product Manager
 
@@ -332,6 +355,8 @@ project-root/
 
 | From | To | Bundle | Gate |
 |---|---|---|---|
+| Owner | Piper | Kickoff prompt, seed materials | Conversation started |
+| Piper | Pam | `requirements/product-overview/` bundle | Product shape clear; actors named; modules identified; open questions listed |
 | Owner | Pam | Vision, visuals (Mode B) | Conversation started |
 | Pam | Tom | `requirements/` bundle | All items labeled; owner signed off; `open-questions.md` classified |
 | Tom | Archie | `tech-specs/` bundle | Every use case mapped to flows; every route has roles + errors; domain model complete |
@@ -352,6 +377,7 @@ project-root/
 
 ## 6. Escalation and Ambiguity Routing
 
+- **Product framing question** (what is this product, who are the users, what are the modules) → `Piper` for new/vague products; `Pam` once the shape is known.
 - **Product question** (what should this do, who can do it, why) → `Pam`.
 - **Technical contract question** (endpoint shape, schema, state machine) → `Tom` during spec; `Brad` during and after implementation.
 - **Implementation question** (how to build in the stack) → `Brad` / `Fran` / `Archie` by layer.
@@ -388,6 +414,7 @@ project-root/
 
 **Active:**
 
+- Piper produces the product-overview bundle (`product-overview.md`, `prd.md`, `actors.md`, `module-overview.md`, `open-questions.md`) for new or vaguely-defined products/modules.
 - Pam produces the full requirements bundle with confidence labels, use-case template, Mode A/B, and handoff floor.
 - Tom converts requirements into per-feature tech specs (`domain-model.md`, `api-surface.md`, `flows.md`), orchestrating Dom. Supports JIT invocation.
 - Dom operates as Tom's subagent during greenfield; existing mid-implementation impact classification is unchanged.

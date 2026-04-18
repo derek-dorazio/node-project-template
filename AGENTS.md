@@ -28,12 +28,14 @@ Before implementing any work, read and follow:
 6. **[Testing Rules](testing-rules.md)** — unit, integration, functional API, smoke, E2E, and contract testing strategy
 7. **[Model Change Rules](model-change-rules.md)** — definition of done when domain models change
 8. **[Domain Model Conventions Rules](domain-model-conventions-rules.md)** — lifecycle naming, `status` vs `isActive`, soft-delete vs hard-delete semantics
-9. **[Product Requirements Rules](product-requirements-rules.md)** — Pam's output structure, use case template, confidence labels, handoff floor
-10. **[Technical Specification Rules](technical-specification-rules.md)** — Tom's output structure, domain model, API surface, flows, handoff floor
+9. **[Product Discovery Rules](product-discovery-rules.md)** — Piper's discovery scope, output artifacts, and handoff floor before requirements work begins
+10. **[Product Requirements Rules](product-requirements-rules.md)** — Pam's output structure, use case template, confidence labels, handoff floor
+11. **[Technical Specification Rules](technical-specification-rules.md)** — Tom's output structure, domain model, API surface, flows, handoff floor
 ## Persona Playbooks
 
 The `agents/` directory contains role-scoped playbooks for common kinds of work:
 
+- `agents/product-discovery.md` — broad product framing, PRD shaping, and discovery handoff before requirements work
 - `agents/product-manager.md` — product requirements, use cases, screens, business rules, glossary
 - `agents/technical-specification-creator.md` — feature-level tech specs: domain model, API surface, flows
 - `agents/data-modeler.md` — domain model derivation, fields/constraints, state machines, convention enforcement
@@ -55,11 +57,14 @@ Important:
 
 ## Workflow Expectations
 
-- Follow the spec-driven lifecycle: Requirements (Pam) → Technical Specification (Tom + Dom) → Design Plans (Archie) → Execution Plans (Archie) → Implementation (Brad, Fran).
+- Follow the spec-driven lifecycle: Product Discovery (Piper) → Requirements (Pam) → Technical Specification (Tom + Dom) → Design Plans (Archie) → Execution Plans (Archie) → Implementation (Brad, Fran).
 - Track work through plan task tables. Mark tasks `In Progress` when starting, `Done` when all layers are complete.
 - Do not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.
 - Update every affected plan when finishing work.
 - Do not maintain competing instruction sets across `AGENTS.md`, `CLAUDE.md`, `rules/`, and `agents/`.
+- At the start of a resumed session, re-read `rules/working-style.md` to restore the expected collaboration style and continuity defaults before implementing.
+- When a prior session intentionally paused work, check `docs/SESSION-HANDOFF.md` for the current "resume here" note before choosing the next slice.
+- When closing out a session where work is paused or context is about to change, create or update `docs/SESSION-HANDOFF.md` with a brief "resume here" note covering what was just completed, what's next, and any open decisions.
 
 ## Quality Gates
 

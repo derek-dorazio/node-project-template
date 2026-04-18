@@ -4,6 +4,14 @@
 
 All product work follows a spec-driven lifecycle. Agents must not skip phases or implement behavior that hasn't been specified.
 
+### Phase 0: Product Discovery (Piper)
+
+Use when starting a brand-new product, vague module, or poorly defined feature area. Piper frames the product broadly before Pam begins detailed requirements work.
+
+Deliverables: `requirements/product-overview/` bundle per the handoff floor defined in `agents/product-discovery.md`.
+
+Skip this phase when the product shape is already clear and `requirements/product-overview/` artifacts already exist.
+
 ### Phase 1: Requirements and Domain Modeling
 
 Before any design or implementation:
@@ -251,11 +259,12 @@ Current persona nickname map:
 
 | Formal Persona | Nickname | Notes |
 |---|---|---|
+| Product Discovery | Piper | High-level product framing, PRD shaping, and discovery handoff |
+| Product Manager | Pam | Product/use-case clarification and review |
 | Technical Specification Creator | Tom | Converts product requirements into feature-level technical specifications with Dom |
 | Data Modeler | Dom | Model and contract impact classification |
 | Backend Developer | Brad | Service, DTO, OpenAPI, and test implementation |
 | Frontend Developer | Fran | Web UI and browser-flow delivery |
-| Product Manager | Pam | Product/use-case clarification and review |
 | Project Manager | Parker | Plan shaping, sequencing, and reconciliation |
 | Architect | Archie | Cross-cutting architecture and platform work |
 | Test Planner | Tess | Test case derivation from specs, test matrix, coverage audits |
