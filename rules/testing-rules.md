@@ -55,6 +55,31 @@ All services and clients must follow these testing standards. This document defi
 - **Smoke tests** prove a deployed environment is healthy (not behavioral coverage).
 - **Browser E2E** proves the UI works as a user would experience it.
 
+### Testing Persona Boundary
+
+- `Tess` defines expected scenario/layer coverage in a feature test matrix when that planning artifact exists.
+- `Quinn` executes the relevant lanes, triages failures, and reports release confidence.
+- `Riley` reviews code quality and regression risk, but does not replace Tess as the coverage-matrix owner.
+
+### Core Testing Standard
+
+Coverage percentages are only a backstop. The primary standard is behavioral proof:
+
+- Every documented positive use case must be represented by at least one automated test at the most appropriate layer.
+- Every documented negative/error/permission use case must be represented by at least one automated test at the most appropriate layer.
+- If a released behavior does not have a truthful automated proof, it is not considered complete just because line coverage thresholds pass.
+
+Coverage thresholds exist to pressure slices toward writing tests, but they do not replace use-case coverage. A slice with acceptable percentage coverage but missing core positive/negative use-case proof is still incomplete.
+
+### Logging and Branch-Proof Rule
+
+When a slice is instrumenting logging or auditing branch behavior, the testing goal is still behavioral proof, not log-string proof.
+
+- Do not assert log message strings or snapshot raw log output as the primary test evidence.
+- Tests must assert the natural outcome of the branch under test: typed exceptions, normalized error envelopes/codes, returned values, state transitions, or persistence/query results.
+- If branch logic is not testable without asserting logs, refactor the code so the branch behavior becomes testable directly.
+- Logging/backfill slices are incomplete until the newly instrumented positive and negative branches are also covered by truthful automated tests at the appropriate lower layer.
+
 ---
 
 ## 3. Required Local Quality Gates
@@ -77,6 +102,13 @@ Notes:
 - Treat these as pre-push gates, not optional follow-up checks.
 - Coverage threshold enforcement is part of the required gate.
 - Smoke tests and browser E2E remain CI/deployment signals.
+- Focused or nearby test runs are useful for iteration speed, but they are additive only. They never replace the required local gate set before commit or push.
+- A slice that passes only targeted tests but skips a required broader gate is still unvalidated. If CI later finds a stale unit/integration/functional failure that the required local gate would have caught, that is a workflow failure, not a CI-only surprise.
+- "I ran the tests closest to the code I changed" is not sufficient when the repo rules require broader gates. Shared-model, shared-contract, or shared service changes must still clear the full required local suites because stale assertions often live outside the immediately touched files.
+- Failing automated tests indicate either a real defect that must be fixed immediately, or a test that is no longer truthful and must be corrected or removed in the same slice.
+- Do not knowingly deploy broken or half-implemented code behind a green-ish test story. If the released behavior is still broken, the fixing slice is not done and deployment should stop.
+- Frontend-only classification does not apply when a slice changes shared domain types, DTOs, generated contract outputs, backend mappers, or backend response shaping. Treat those as backend-impacting work and rerun the full backend gate set before push.
+- When a slice changes the backend model, rerun and repair every impacted suite in the local gate set as part of that slice. Stale mocks, factories, builders, or setup helpers are not separate cleanup work; they are part of the model-change fix.
 
 ---
 
@@ -177,6 +209,21 @@ it('GET /api/v1/<resource> matches <Resource>ResponseSchema', async () => {
 ```
 
 Do not defer contract verification to a "testing cleanup slice." It is part of the slice that changes the contract.
+
+### Shared DTO Reuse Rule
+
+When a route reuses an existing shared DTO on a new API surface, contract verification must include at least one representative happy-path assertion for that surface, not only error-path checks.
+
+Why:
+
+- Shared DTO reuse is a common place where fields get omitted or remapped incorrectly.
+- Negative-path-only coverage will miss serialization and enum-mapping drift until broader CI coverage fails.
+
+Examples that require happy-path verification:
+
+- Admin routes reusing an existing user/account DTO.
+- Alternate list/detail surfaces reusing an existing entity DTO.
+- New role-scoped endpoints returning a previously defined response schema.
 
 ### Contract Verification Heuristics
 
@@ -325,6 +372,26 @@ However, the local `<projectName>_test` database is intentionally disposable. It
 
 Smoke and E2E tests should be use-case driven and traceable to documented product journeys.
 
+### Required Use-Case Coverage Mapping
+
+For every active feature lane, Tess and Quinn must be able to point to where the documented use cases are proven.
+
+Minimum expectation before deployment:
+
+- Positive happy-path coverage for each released use case.
+- Negative/error or permission-path coverage for each released use case where a failure mode is product-significant.
+- At least one full-stack connected proof for each released user-facing workflow family.
+
+Acceptable proof layers vary by behavior:
+
+- Unit: business logic and validation branches.
+- Data integration: persistence/query semantics.
+- Contract verification: DTO/runtime shape proof.
+- Functional API: truthful API-level user journey proof.
+- Browser E2E: truthful connected browser workflow proof.
+
+Do not rely on only one layer when the released behavior spans multiple risks. A workflow that crosses UI, API, persistence, and auth typically needs contract verification for the routes, functional API for the journey, and one truthful browser E2E once the environment is stable.
+
 ### Use-Case Traceability
 
 Every smoke and E2E test must trace to a documented use case. Reference the plan and use-case ID.
@@ -337,6 +404,24 @@ Every smoke and E2E test must trace to a documented use case. Reference the plan
 - Do not rely on seed data, fake UUIDs, or preexisting state.
 - Assertions must be strong and intentional.
 - Keep scope minimal: health check, auth round-trip, one core domain operation.
+
+### Browser E2E Purpose
+
+The browser E2E suite exists to smoke-test a real connected workflow through the deployed stack so we can catch integration breakage that lower layers miss.
+
+That means:
+
+- Each browser journey must prove a real user can complete the intended flow, not just load the first page.
+- Browser E2E should flush out connection defects between frontend, API, persistence, auth, background work, and environment data/setup.
+- If a browser E2E workflow cannot run because required environment data does not exist, that is an environment/product-readiness defect to plan around, not a reason to pretend the flow is already proven.
+
+Browser E2E is **not** the primary mechanism for discovering ordinary coding defects. The intended defect-detection order is:
+
+1. Local unit/integration/contract/functional suites before commit.
+2. CI validation before publish/artifact promotion.
+3. Browser E2E smoke for deployment failures, broken stack wiring, and environment/configuration regressions.
+
+If browser E2E is repeatedly finding defects that should have been caught by lower layers, stop expanding E2E and strengthen the lower-layer tests first.
 
 ### Browser E2E Tests (Playwright)
 

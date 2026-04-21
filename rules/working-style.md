@@ -18,6 +18,8 @@ testing rules elsewhere in `rules/`.
 
 - for substantial work, use persona labels when helpful to explain who is
   acting in the current slice
+- for substantial work, include a short status summary that makes the current
+  state explicit
 - keep updates concise but informative
 - be explicit about:
   - what is confirmed
@@ -25,15 +27,62 @@ testing rules elsewhere in `rules/`.
   - what is still open
 - give opinionated recommendations when useful, but keep them revisable
 - avoid making the user do unnecessary coordination work
+- when screenshots, reference visuals, or example flows would materially improve
+  product definition or interaction design, ask for them explicitly instead of
+  guessing from prose alone
+- keep visual requests narrow and specific so the user knows exactly what kind
+  of screenshot or example would help
+
+### Status Summary Expectations
+
+When a slice involves planning, refinement, implementation, testing, or git
+checkpointing, substantive updates should make the current state easy to scan.
+
+Prefer a short summary using explicit workflow tags such as:
+
+- `Status: Refinement`
+- `Status: Plan Updated`
+- `Status: Ready for Implementation`
+- `Status: Implementing`
+- `Status: Implementation Complete`
+- `Status: Verifying`
+- `Status: Verified`
+- `Status: Ready to Commit`
+- `Status: Committed and Pushed`
+- `Status: Blocked`
+
+The goal is not rigid ceremony. The goal is to reduce ambiguity about whether:
+
+- a plan or requirement change is only drafted or actually updated
+- implementation is still pending or already complete
+- verification has run or is still outstanding
+- work is committed/pushed or only complete locally
 
 ## 3. Execution Preferences
 
 - `plans/` remain the execution source of truth
 - `requirements/` and `tech-specs/` are handoff artifacts and design inputs,
   not replacements for active plans
+- when the user confirms a higher-level product or technical decision, infer and
+  propagate the obvious downstream implications through requirements, specs,
+  model, API, and implementation planning without asking the user to restate
+  the same intent at each layer
+- only escalate back to the user when the downstream implication creates a real
+  fork, hidden risk, or non-obvious tradeoff
 - prefer truthful lifecycle behavior over admin/test-only shortcuts
 - when product consequences are non-obvious, confirm the decision before
   implementation expands
+- keep persona boundaries clear and do not casually blur product, technical,
+  frontend UX, backend, architecture, and QA ownership
+- if a role boundary is unclear or a persona was misassigned in the current
+  discussion, correct it proactively instead of making the user referee role
+  ownership
+- when a repeated role mix-up appears, update the relevant persona playbooks or
+  shared rules in the same slice so the correction becomes durable
+- a slice is not finished if the relevant local test suites are still failing
+- do not treat "code complete" as finished work when validation is still red
+- when a slice is complete and the relevant local tests are green, commit and
+  push that slice before moving on to the next one
 
 ## 4. Testing And Truthfulness Defaults
 
@@ -49,3 +98,8 @@ testing rules elsewhere in `rules/`.
   `rules/` or `docs/` rather than relying on conversational memory alone
 - use `docs/SESSION-HANDOFF.md` for short "resume here" notes when a session is
   intentionally paused or the machine/repo context is about to change
+- when product discussions resolve broad goals, actor behavior, or operating
+  principles, update the shared `requirements/product-overview/` and
+  `requirements/product-requirements/` artifacts continuously rather than
+  letting important decisions accumulate only inside localized feature docs or
+  chat history

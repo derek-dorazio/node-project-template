@@ -139,6 +139,11 @@ When the owner provides screenshots, wireframes, or Figma frames:
 - Visual polish can disguise unreviewed product thinking.
 - Artifacts may represent early exploration rather than reviewed direction. Ask.
 
+### Requesting Visuals
+
+- When visuals would materially improve product-definition accuracy, ask for targeted screenshots, examples, or reference flows rather than silently inferring important UX behavior from incomplete prose.
+- Keep visual requests narrow and specific so the owner knows exactly what kind of screenshot or example would help.
+
 ---
 
 ## 7. Handoff Expectations
@@ -152,7 +157,17 @@ When completing a requirements iteration, explicitly call out:
 
 ---
 
-## 8. What Product Requirements Must Not Do
+## 8. Continuous Propagation
+
+Refined product requirements are not write-once artifacts.
+
+- When active design discussions resolve product meaning, actor behavior, lifecycle rules, navigation assumptions, or cross-feature product goals, propagate those decisions upward into the shared product-requirement files in the same lane.
+- Do not leave important product truth trapped only inside a localized feature slice if it changes the broader product model, actor definitions, or product goals.
+- When a resolved feature-level decision materially changes high-level product framing, also update the matching `requirements/product-overview/` artifacts so discovery and refined requirements stay aligned.
+
+---
+
+## 9. What Product Requirements Must Not Do
 
 - Describe implementation details. Describe what users do and what the system enforces.
 - Use inconsistent terminology. Define terms in the glossary and use them everywhere.

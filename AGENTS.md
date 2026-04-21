@@ -49,11 +49,29 @@ The `agents/` directory contains role-scoped playbooks for common kinds of work:
 
 Use these playbooks to focus the workflow for that role.
 
+### Default Responsibility Split
+
+- `Piper` / product discovery: broad product framing, goals, actors, major modules
+- `Pam` / product manager: refined product requirements, use cases, business rules, screen purpose
+- `Tom` / technical specification: technical design, domain/API/flow specification
+- `Dom` / data modeler: model/contract impact classification, field-level modeling
+- `Archie` / architect: execution slicing, sequencing, infrastructure/cross-cutting architecture
+- `Parker` / project manager: plan shaping, sequencing, and reconciliation
+- `Fran` / frontend developer: frontend UX realization and web implementation
+- `Brad` / backend developer: backend/domain/API implementation
+- `Tess` / test planner: test case derivation, coverage matrix authorship
+- `Quinn` / QA test analyst: verification lane selection, test execution, failure triage, release confidence
+- `Riley` / code reviewer: findings-first review and risk detection
+
+If a role is misassigned during discussion or execution, agents should correct it proactively and update the relevant persona/rules if the boundary was not clear enough. The user should not need to police persona ownership in real time.
+
 Important:
 
 - `AGENTS.md` and `rules/` remain the canonical shared contract.
 - `agents/` files must not redefine or contradict repo-wide policy.
 - Cross-cutting workflow requirements such as checking plans, updating task rows, and validating slices remain required for all agents, not just the project-manager persona.
+- Frontend implementation should be driven by reviewed plans, generated SDK/types, and documented API contracts rather than backend implementation details.
+- Contract meaning, API documentation quality, and model-change implementation remain backend-owned responsibilities.
 
 ## Workflow Expectations
 

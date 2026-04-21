@@ -80,6 +80,8 @@ Every module that registers Fastify routes **must** have a corresponding mapper 
 - Inline `.map()` transformations in route handlers or handler files are not acceptable.
 - The mapper is the single place where persistence/domain shapes are translated to API response shapes.
 - Modules exempt from this rule: `config` (static data only), `health` (no domain objects).
+- Reusing an existing shared DTO on a new route surface does **not** justify local inline shaping in the handler. The route must call a mapper, and if no suitable shared mapper/helper exists yet, creating or extracting one is part of the slice.
+- "Small," "obvious," or "admin-only" response shaping is not an exception. Handler-level DTO assembly is prohibited because it is one of the main ways DTO/domain drift re-enters the codebase.
 
 ### Required Route Schema Fields
 
@@ -104,6 +106,12 @@ That means:
 - Document enums/status values when names alone do not explain lifecycle or behavior.
 
 If a frontend question reveals that the contract meaning was not clear from the documented API surface, treat that as a backend documentation defect and fix it in the contract source.
+
+Contract correctness comes before contract prose:
+
+- DTOs and route schemas must reflect the current domain model and approved product behavior, not merely a broader set of technically accepted fields.
+- If a field is retired from the active domain or product model, remove it from DTOs, route schemas, regenerated OpenAPI, and generated SDK/types.
+- Do not leave stale properties in the API contract just because handlers or services currently ignore them.
 
 If a DTO or schema is no longer used by any active route, remove it instead of leaving it exported as orphaned contract surface.
 
@@ -210,6 +218,7 @@ Rules:
 - Define a shared Zod schema for the error envelope in the shared `dto/` package.
 - Fastify's global error handler should format unhandled errors into this envelope where practical, and new route work should not bypass that standard.
 - Route schemas must declare error response shapes for the most relevant statuses such as 400, 401, 403, and 404.
+- Functional API, contract-verification, or data integration tests must validate representative error response shapes, not just success paths.
 
 ---
 
