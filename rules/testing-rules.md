@@ -154,7 +154,7 @@ Tests start Fastify with `app.listen({ port: 0 })` and configure the SDK client 
 
 ### File Naming
 
-Files use `.functional.ts` suffix: `league-lifecycle.functional.ts`, `auth.functional.ts`, etc.
+Files use `.functional.ts` suffix: `<feature>-lifecycle.functional.ts`, `auth.functional.ts`, etc.
 
 ### Use-Case Traceability
 

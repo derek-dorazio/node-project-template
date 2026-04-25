@@ -6,21 +6,25 @@ This document describes the end-to-end flow through the agent personas, from a p
 
 ## 1. Persona Roster
 
+Authoritative persona playbooks live in `personas/<name>.md`. Tool-specific wrappers in `.claude/skills/`, `.claude/agents/`, `.agents/skills/`, and `.codex/agents/` are thin pointers — they each instruct the model to Read the matching `personas/<name>.md` before acting.
+
 | Persona | Nickname | Status | Scope |
 |---|---|---|---|
-| Product Discovery | `Piper` | Active | Broad product framing, PRD shaping, actor/module identification, discovery handoff |
+| Product Discovery | `Piper` | Dormant | Broad product framing, PRD shaping, actor/module identification, discovery handoff. Invoke explicitly for greenfield product or new-module work. |
 | Product Manager | `Pam` | Active | Product intent: requirements, use cases, roles, glossary, screens, business rules |
-| Technical Specification Creator | `Tom` | Active | Feature-level tech spec: domain model, API surface, flows; orchestrates `Dom` |
+| Technical Specification Creator | `Tom` | Dormant | Pre-implementation tech spec for major new features only; deleted after ship (ADR-0003). Invoke explicitly. |
 | Data Modeler | `Dom` | Active | Domain model: entities, fields, constraints, state machines, convention enforcement |
-| Architect | `Archie` | Active | Cross-cutting architecture, design plans, infra |
-| Project Manager | `Parker` | Active | Slicing, sequencing, plan reconciliation |
+| Architect | `Archie` | Active | Cross-cutting architecture, design plans, infra, ADR authorship |
 | Backend Developer | `Brad` | Active | Service, DTOs, mappers, routes, backend tests |
 | Frontend Developer | `Fran` | Active | React pages, hooks, components, frontend tests |
 | Test Planner | `Tess` | Active | Test case derivation from specs, test matrix, coverage audits |
-| QA/Test Engineer | `Quinn` | Active | Verification lane selection, test execution, failure triage, release confidence |
-| Code Reviewer | `Riley` | Active | Code quality, rule compliance, architectural correctness |
+| QA/Test Engineer | `Quinn` | Subagent | Verification lane selection, test execution, failure triage, release confidence (isolated context, findings report) |
+| Code Reviewer | `Riley` | Subagent | Code quality, rule compliance, architectural correctness (isolated context, findings table) |
+| Application Spec Builder | `Abe` | Dormant | One-time application-spec extraction from existing implementations; not part of the active flow. Invoke explicitly. |
 
 Formal names remain canonical in plans and rules. Nicknames are shorthand only.
+
+Project task tracking is owned by **Beads** (`.beads/issues.jsonl`, `bd` CLI), not by any persona. Every active feature or major effort maps to a Beads epic; every slice is a child story. See `docs/adr/0001-beads-as-live-task-tracker.md`.
 
 ---
 
@@ -31,17 +35,17 @@ Formal names remain canonical in plans and rules. Nicknames are shorthand only.
 ```mermaid
 flowchart TD
     Owner([Human Product Owner])
-    Piper[Piper — Product Discovery]
+    Piper[Piper — Product Discovery — dormant]
     Pam[Pam — Product Manager]
-    Tom[Tom — Tech Spec Creator]
+    Tom[Tom — Tech Spec Creator — dormant]
     Dom[Dom — Data Modeler]
     Archie[Archie — Architect]
-    Parker[Parker — Project Manager]
+    Beads[(Beads epic + child stories)]
     Brad[Brad — Backend Developer]
     Fran[Fran — Frontend Developer]
     Tess[Tess — Test Planner]
-    Quinn[Quinn — QA Engineer]
-    Riley[Riley — Code Reviewer]
+    Quinn[Quinn — QA Engineer subagent]
+    Riley[Riley — Code Reviewer subagent]
 
     Owner -- kickoff / seed materials --> Piper
     Piper -- product-overview/ bundle --> Pam
@@ -53,9 +57,9 @@ flowchart TD
     Pam -- requirements/ bundle --> Archie
     Tess -- test matrix --> Brad
     Tess -- test matrix --> Fran
-    Archie -- plans/ --> Parker
-    Parker -- sliced plan rows --> Brad
-    Parker -- sliced plan rows --> Fran
+    Archie -- narrative plan + opens epic --> Beads
+    Beads -- sliced child stories --> Brad
+    Beads -- sliced child stories --> Fran
     Brad -- regenerated SDK + contract docs --> Fran
     Brad -- code --> Quinn
     Fran -- code --> Quinn
@@ -69,6 +73,8 @@ flowchart TD
     Fran -. model-impact questions .-> Dom
 ```
 
+Piper and Tom appear in this diagram for completeness. Both are dormant in mature codebases — invoke them explicitly only when the work justifies it (greenfield framing for Piper; pre-implementation tech framing for major new features for Tom). For incremental work, skip directly from Pam to Archie/implementation.
+
 ### 2.2 Mode B — Vision Plus Visual Artifacts
 
 Identical to Mode A except Pam performs a visual-extraction pass first, using the artifacts as anchors for `screens.md` and `navigation-and-entry-points.md` before targeted conversation. Piper may still precede Pam if the overall product shape needs framing first.
@@ -79,7 +85,7 @@ flowchart TD
     Visuals[/Screenshots / Figma / Wireframes/]
     Piper[Piper — Product Discovery]
     Pam[Pam — Product Manager]
-    Downstream[... Tom, Dom, Archie, Parker, Brad, Fran, Riley ...]
+    Downstream[... Tom, Dom, Archie, Beads, Brad, Fran, Riley ...]
 
     Owner -- kickoff / seed materials --> Piper
     Piper -- product-overview/ bundle --> Pam
@@ -163,28 +169,42 @@ project-root/
 │           ├── flows.md                       # Per use case: screen → API → service → DB
 │           └── open-questions.md              # Technical ambiguities
 │
-├── plans/                                     # Archie + Parker
-│   ├── <NN>-<feature-area>.md                 # Design plans with task tables
-│   └── archive/
+├── plans/                                     # Narrative-only plan files (Archie)
+│   └── <NN>-<feature-area>.md                 # Companion to a Beads epic; deleted on epic close
+│
+├── .beads/                                    # Beads task tracker
+│   └── issues.jsonl                           # Live task state (epics + child stories)
 │
 ├── docs/                                      # Evergreen reference docs
 │   ├── PERSONA-FLOW.md                        # This document
 │   ├── SESSION-HANDOFF.md                     # Active "resume here" note (updated at session close)
 │   ├── DATABASE-SCHEMA.md                     # Archie: target schema reference
-│   └── PROJECT-SETUP.md                       # Developer setup guide
+│   ├── PROJECT-SETUP.md                       # Developer setup guide
+│   └── adr/                                   # Architecture Decision Records (immutable)
 │
-├── agents/                                    # Persona playbooks
-│   ├── product-discovery.md                   # Piper
-│   ├── product-manager.md                     # Pam
-│   ├── technical-specification-creator.md     # Tom
-│   ├── data-modeler.md                        # Dom
-│   ├── architect.md                           # Archie
-│   ├── project-manager.md                     # Parker
-│   ├── backend-developer.md                   # Brad
-│   ├── frontend-developer.md                  # Fran
-│   ├── test-planner.md                        # Tess
-│   ├── qa-test-analyst.md                     # Quinn
-│   └── code-reviewer.md                       # Riley
+├── personas/                                  # Authoritative persona playbooks
+│   ├── piper.md                               # Piper (dormant)
+│   ├── pam.md                                 # Pam
+│   ├── tom.md                                 # Tom (dormant)
+│   ├── dom.md                                 # Dom
+│   ├── archie.md                              # Archie
+│   ├── brad.md                                # Brad
+│   ├── fran.md                                # Fran
+│   ├── tess.md                                # Tess
+│   ├── quinn.md                               # Quinn (subagent body)
+│   ├── riley.md                               # Riley (subagent body)
+│   └── abe.md                                 # Abe (dormant, one-time spec extraction)
+│
+├── .claude/                                   # Claude Code thin-pointer wrappers → personas/
+│   ├── skills/<name>/SKILL.md                 # Active + dormant personas as Claude skills
+│   └── agents/<name>.md                       # Quinn, Riley as Claude subagents
+│
+├── .agents/                                   # Codex thin-pointer wrappers → personas/
+│   └── skills/<name>/SKILL.md                 # Active + dormant personas as Codex skills
+│       (dormant skills include agents/openai.yaml with allow_implicit_invocation: false)
+│
+├── .codex/                                    # Codex subagent definitions
+│   └── agents/<name>.toml                     # Quinn, Riley as Codex subagents
 │
 ├── rules/                                     # Canonical rules
 │   ├── workflow-rules.md
@@ -269,22 +289,12 @@ project-root/
   - Pam's `requirements/`.
   - Tom's `tech-specs/`.
 - **Outputs:**
-  - `plans/<NN>-<feature>.md` — design plans with Key Decisions, Data Model Changes, API Surface, Dependencies, Deferred, and Action Plan task table.
+  - `plans/<NN>-<feature>.md` — narrative-only design plan paired with a Beads epic. Carries Key Decisions, Data Model Changes, API Surface, Dependencies, Deferred. **No task tables** — slice list lives in Beads.
+  - A Beads epic with child stories (one per slice), opened at planning time.
   - `docs/DATABASE-SCHEMA.md` — target schema reference.
-  - *(future)* `docs/adr/`, `docs/ARCHITECTURE.md`, `docs/INFRASTRUCTURE.md`, extended plan template.
-- **Conditional in JIT flow:** required for cross-cutting changes (new service, infra, auth, breaking migration); optional for in-boundary features.
-- **Handoff criteria:** every plan has a task table; design plans reference the use cases they implement.
-
-### 4.5 Parker — Project Manager
-
-- **Role:** Shape plans into executable slices, sequence work, reconcile progress.
-- **Inputs:**
-  - Archie's design plans and plan task tables.
-- **Outputs:**
-  - Sliced plan rows ready for Brad and Fran.
-  - Sequencing guidance and dependency declarations.
-  - Reconciliation between implementation reality and plan rows.
-- **Handoff criteria:** each slice independently committable and validatable; dependencies explicit; task rows current.
+  - `docs/adr/<NNNN>-<title>.md` — for any cross-cutting decisions captured during the plan that should outlive the slice.
+- **Conditional invocation:** required for cross-cutting changes (new service, infra, auth, breaking migration); optional for in-boundary features.
+- **Handoff criteria:** every Beads child story is committable and validatable on its own; dependencies declared; design plan references the use cases it implements; durable patterns captured as ADRs *before* the plan is deleted on epic close.
 
 ### 4.6 Brad — Backend Developer
 
@@ -370,8 +380,8 @@ project-root/
 | Pam | Tom | `requirements/` bundle | All items labeled; owner signed off; `open-questions.md` classified |
 | Tom | Archie | `tech-specs/` bundle | Every use case mapped to flows; every route has roles + errors; domain model complete |
 | Tom | Brad / Fran | `tech-specs/features/<feature>/*` | Same gate as Tom → Archie, scoped to the feature |
-| Archie | Parker | `plans/` | Task table present; design decisions documented |
-| Parker | Brad / Fran | Sliced plan rows | Slices independently committable; dependencies declared |
+| Archie | Beads | Narrative `plans/<NN>-*.md` + Beads epic with child stories | Plan present; epic open; child stories enumerated; dependencies declared in Beads; design decisions documented |
+| Beads | Brad / Fran | Beads child story | Story open and assigned; slice independently committable |
 | Brad | Fran | Regenerated SDK + contract docs | SDK exported; contract-documentation checklist satisfied |
 | Fran | Brad | Contract question | Cites what docs say; proposes doc addition |
 | Tom | Tess | `tech-specs/` bundle | Tech spec complete; Tess derives test matrix |
@@ -404,13 +414,15 @@ project-root/
 |---|---|---|
 | `requirements/product-overview/` | Piper | Active — discovery inputs for Pam |
 | `requirements/` | Pam | Active — canonical product requirements |
-| `tech-specs/` | Tom + Dom | Active — canonical technical specifications |
-| `plans/` | Archie + Parker | Active — design plans and task tables |
+| `tech-specs/` | Tom + Dom | Pre-implementation only — deleted after ship (ADR-0003) |
+| `plans/` | Archie | Narrative companion to a Beads epic — deleted on epic close (ADR-0002) |
+| `.beads/issues.jsonl` | All | Active — canonical task tracker (ADR-0001) |
+| `personas/` | All persona owners | Active — authoritative persona playbooks |
+| `docs/adr/` | Archie | Active — immutable cross-cutting decisions |
 | `docs/SESSION-HANDOFF.md` | All | Active — updated at session close; read at session resume |
 | `docs/DATABASE-SCHEMA.md` | Archie | Active |
 | `docs/ARCHITECTURE.md` | Archie | *(future)* |
 | `docs/INFRASTRUCTURE.md` | Archie | *(future)* |
-| `docs/adr/` | Archie | *(future)* |
 | `docs/FEATURE-FLAGS.md` | Brad | *(future)* |
 | `docs/RUNBOOKS/` | Brad | *(future)* |
 | `CHANGELOG.md` | Archie or Riley | *(future)* |
@@ -421,16 +433,20 @@ project-root/
 
 **Active:**
 
-- Piper produces the product-overview bundle (`product-overview.md`, `prd.md`, `actors.md`, `module-overview.md`, `open-questions.md`) for new or vaguely-defined products/modules.
+- Beads (`.beads/issues.jsonl`, `bd` CLI) is the canonical live task tracker (ADR-0001).
 - Pam produces the full requirements bundle with confidence labels, use-case template, Mode A/B, and handoff floor.
-- Tom converts requirements into per-feature tech specs (`domain-model.md`, `api-surface.md`, `flows.md`), orchestrating Dom. Supports JIT invocation.
-- Dom operates as Tom's subagent during greenfield; existing mid-implementation impact classification is unchanged.
-- Archie, Parker, Brad, Fran, and Riley continue using their current persona files with no new output requirements.
+- Dom owns domain modeling and contract-impact classification.
+- Archie produces narrative `plans/<NN>-*.md` paired with a Beads epic, and writes ADRs in `docs/adr/` for durable cross-cutting decisions.
+- Brad, Fran, Tess, Quinn (subagent), and Riley (subagent) operate per their current persona playbooks under `personas/`.
+
+**Dormant / explicit-invocation only:**
+
+- Piper — invoke for greenfield product or new-module framing.
+- Tom — invoke pre-implementation for major new features only; tech specs deleted after ship (ADR-0003).
+- Abe — one-time application-spec extraction from existing implementations.
 
 **Future:**
 
-- Archie ADRs and current-state docs (`docs/ARCHITECTURE.md`, `docs/INFRASTRUCTURE.md`, `docs/adr/`).
+- Archie current-state docs (`docs/ARCHITECTURE.md`, `docs/INFRASTRUCTURE.md`).
 - Brad slice summaries, contract examples, migration runbooks, feature-flag inventory, and operational runbooks.
 - Fran contract-question format, slice summary, and frontend registries.
-- Riley handoff-completeness review scope.
-- Tom project-level outputs (consolidated domain model, error envelope, auth model).

@@ -1,8 +1,32 @@
 # Product Requirements Rules
 
-These rules govern the product requirements artifacts that `Pam` (Product Manager) produces. All product requirements live under `requirements/product-requirements/` and serve as the canonical source of product intent for downstream agents.
+These rules govern the product requirements artifacts that `Pam` (Product Manager) produces. Product requirements live under `requirements/product-requirements/` and serve as the canonical source of product intent for major-feature work.
 
-For the Pam persona playbook (operating modes, conversation starters, iteration discipline), see `agents/product-manager.md`.
+For the Pam persona playbook, see `personas/pam.md`.
+
+---
+
+## 0. When To Write A Requirements Bundle (And When To Skip)
+
+The Piper/Pam requirements bundle — overview + use-cases + screens + business-rules + open-questions for a feature — is high-leverage for **major new features** on a mostly-greenfield surface. It is low-leverage and often net-negative for incremental work on features that already exist.
+
+### Write a requirements bundle when all of the following apply
+
+- The feature is genuinely new (not already covered by an existing feature bundle).
+- It introduces new actors, new domain concepts, new navigation surfaces, or substantially new product behavior.
+- Product decisions benefit from shared framing *before* design/implementation begins.
+
+### Skip the bundle when
+
+- The work fits within an existing feature's bundle (no new actors, no new concepts, no new primary surfaces).
+- The scope is a UX refinement, incremental improvement, or bug-class fix.
+- Rewriting the requirements would mostly duplicate what already exists.
+
+For skip cases, capture the product intent directly in the plan file (`plans/NN-*.md`) — just enough narrative for the slice author to do the work. Do not create a parallel requirements artifact.
+
+### Bundles have a lifetime
+
+When a feature has shipped and stabilized, trim the bundle to only what still describes *current* product intent. Delete exploratory open-questions that were answered by shipping. Delete entire bundles for features that are no longer active product scope.
 
 ---
 

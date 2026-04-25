@@ -75,7 +75,7 @@ For every API endpoint:
 
 ### Mapper File Requirement
 
-Every module that registers Fastify routes **must** have a corresponding mapper file. The mapper file must export named functions (e.g., `mapContestToDto`, `mapLeagueToListItem`) that handlers call to transform service/domain results into DTO shapes.
+Every module that registers Fastify routes **must** have a corresponding mapper file. The mapper file must export named functions (e.g., `mapEntityToDto`, `mapEntityToListItem`) that handlers call to transform service/domain results into DTO shapes.
 
 - Inline `.map()` transformations in route handlers or handler files are not acceptable.
 - The mapper is the single place where persistence/domain shapes are translated to API response shapes.
@@ -138,7 +138,7 @@ Do not treat contract documentation as optional polish after the code is correct
 ### Response Rules
 
 - Always describe the real response envelope.
-- If the response is `{ league: ... }`, schema must say `{ league: ... }`.
+- If the response is `{ resource: ... }`, schema must say `{ resource: ... }`.
 - Dates over the wire must be ISO 8601 strings, not `Date` objects.
 
 ### Generated Artifacts Rules
@@ -199,7 +199,7 @@ All error responses must follow a consistent envelope:
 ```typescript
 {
   error: {
-    code: string;         // machine-readable (e.g., "LEAGUE_NOT_FOUND", "VALIDATION_ERROR")
+    code: string;         // machine-readable (e.g., "RESOURCE_NOT_FOUND", "VALIDATION_ERROR")
     message: string;      // human-readable description
     details?: unknown;    // optional structured details (validation field errors, etc.)
   }
@@ -209,7 +209,7 @@ All error responses must follow a consistent envelope:
 Rules:
 - Every 4xx and 5xx response must return this envelope.
 - Validation errors (400) should include `details` with per-field errors when available.
-- Not-found errors (404) should use domain-specific codes (e.g., `CONTEST_NOT_FOUND`).
+- Not-found errors (404) should use domain-specific codes (e.g., `<ENTITY>_NOT_FOUND`).
 - Permission errors (403) should use codes that distinguish the denial reason (e.g., `INSUFFICIENT_PERMISSION`, `NOT_MEMBER`).
 - Intentional application errors must use stable, descriptive, domain-specific codes rather than transport-only placeholders such as `BAD_REQUEST`, `FORBIDDEN`, or `NOT_FOUND` when the domain reason is known.
 - Error codes must be specific enough for clients and tests to distinguish materially different failures that share the same HTTP status.

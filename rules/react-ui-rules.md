@@ -36,8 +36,8 @@ Call real API, let errors propagate, render honest loading/error/empty states.
 The web app must use the shared generated `hey-api` client as its API layer.
 
 ```typescript
-import { client, listLeagues } from '@/lib/api';
-const { data, error } = await listLeagues({ client });
+import { client, listResources } from '@/lib/api';
+const { data, error } = await listResources({ client });
 ```
 
 The `@/lib/api` module configures the SDK client (base URL, auth interceptor) and re-exports all generated operations.

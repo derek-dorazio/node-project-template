@@ -4,11 +4,13 @@ This directory contains reference documentation. It is **not** the source of tru
 
 ## Expected Contents
 
+- **adr/** — Architecture Decision Records. Cross-cutting decisions that outlast a single slice. See `adr/README.md`.
+- **PERSONA-FLOW.md** — End-to-end flow through the agent personas, from product idea to shipped code.
+- **PROJECT-SETUP.md** — First-time project setup, AWS/CI bootstrap, environment configuration.
 - **DATABASE-SCHEMA.md** — Current database schema reference
 - **API-REFERENCE.md** — API endpoint reference (supplement to generated OpenAPI)
 - **DEVELOPER-SETUP.md** — Local development environment setup guide
 - **DEPLOYMENT.md** — Deployment process and environment configuration
-- **ARCHITECTURE-DECISIONS.md** — Record of significant architectural decisions and rationale
 
 ## Important
 

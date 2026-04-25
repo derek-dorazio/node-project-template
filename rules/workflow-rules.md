@@ -1,5 +1,31 @@
 # Workflow Rules
 
+## 0. Document Lifecycle (Governing Rule)
+
+> **One source of truth per concept. Working documents are deleted when the work ships. Durable decisions become ADRs. Git history is the archive.**
+
+The repository uses layered artifacts. Each artifact has a clear lifetime and a single canonical purpose. Do not duplicate content across layers — reference instead.
+
+### Durability tiers
+
+| Tier | Artifact | Lifetime | Purpose |
+|---|---|---|---|
+| Permanent | `rules/*.md`, `personas/*.md`, `docs/adr/*.md`, `AGENTS.md` | Months–years | How we build here; who does what; why we chose durable patterns |
+| Feature-life | `requirements/product-requirements/features/<feature>/` | Weeks–months (during active feature development) | Product intent for a *major* feature; retire/delete when the feature stabilizes |
+| Slice-life | `plans/NN-*.md` | Days–weeks (a single feature reorg or major effort) | Narrative execution context paired with a Beads epic; **deleted** when the parent epic closes |
+| Pre-implementation | `tech-specs/features/<feature>/` | Up to ship | Technical framing before implementation; **deleted** when the implementation lands |
+| Live | `.beads/issues.jsonl` | Hours–days | Current task state, dependencies, slice list, status |
+
+### Governing rules
+
+1. **One canonical home per concept.** If you're writing the same thing in two files, pick one and link from the other. Business rules live in `requirements/.../business-rules.md`. Task status and task lists live in Beads. Architecture decisions live in `rules/` or `docs/adr/`. The generated SDK + domain types are the API contract. The code + tests are the behavioral spec.
+2. **Short-lived artifacts reference long-lived ones, never the reverse.** Plans reference rules, not vice versa. Beads notes reference plans, not vice versa.
+3. **Delete on ship, don't archive.** When a plan's parent Beads epic closes, the plan file is deleted in the same commit (or the next cleanup slice). When a tech spec's implementation lands on `main`, the spec is deleted. Git preserves history; `git show <sha>:path/to/file` retrieves any prior version. Archival directories are anti-patterns — files in the tree get read.
+4. **Capture durable decisions as ADRs.** Decisions that outlast a single slice (architectural choices, cross-cutting patterns, hard boundaries) are written as Architecture Decision Records in `docs/adr/`. Once accepted, ADRs are immutable; supersede with a new ADR rather than editing.
+5. **Rules absorb what plans learn.** If a plan introduces a durable pattern (a new convention, a hard boundary, a reusable approach), update `rules/` or write an ADR in the same effort. Don't leave the pattern only in the plan — it will be deleted when the epic closes.
+
+---
+
 ## 1. Spec-Driven Development Lifecycle
 
 All product work follows a spec-driven lifecycle. Agents must not skip phases or implement behavior that hasn't been specified.
@@ -8,7 +34,7 @@ All product work follows a spec-driven lifecycle. Agents must not skip phases or
 
 Use when starting a brand-new product, vague module, or poorly defined feature area. Piper frames the product broadly before Pam begins detailed requirements work.
 
-Deliverables: `requirements/product-overview/` bundle per the handoff floor defined in `agents/product-discovery.md`.
+Deliverables: `requirements/product-overview/` bundle per the handoff floor defined in `personas/piper.md`.
 
 Skip this phase when the product shape is already clear and `requirements/product-overview/` artifacts already exist.
 
@@ -30,7 +56,7 @@ Pam iterates with the project owner to produce the `requirements/product-require
 2. **Per feature (`features/<feature-slug>/`):** `overview.md`, `use-cases.md`, `screens.md`, `business-rules.md`, `open-questions.md`.
 3. Every use case follows the structured template with alternate flows, error paths, acceptance criteria, and confidence labels.
 
-Deliverables: `requirements/product-requirements/` bundle per the handoff floor defined in `agents/product-manager.md`.
+Deliverables: `requirements/product-requirements/` bundle per the handoff floor defined in `personas/pam.md`.
 
 **Rule: Agents must not implement behavior that isn't covered by a documented use case. If a use case is missing, write it first.**
 
@@ -42,7 +68,7 @@ Tom converts Pam's confirmed requirements into a feature-level technical specifi
 2. **API surface** — route inventory with methods, DTOs, allowed roles, notable errors.
 3. **Flows** — technical sequence per use case: screen → API → service → persistence.
 
-Deliverables: `tech-specs/features/<feature-slug>/` per the handoff floor defined in `agents/technical-specification-creator.md`.
+Deliverables: `tech-specs/features/<feature-slug>/` per the handoff floor defined in `personas/tom.md`.
 
 Tom is invoked automatically (JIT) when requirements exist but tech-specs don't — the human does not need to explicitly trigger this phase.
 
@@ -66,7 +92,7 @@ Break design plans into implementable work:
 3. **Define deliverables per slice** — concrete files and artifacts, not vague descriptions.
 4. **Define dependencies** — which slices must complete before others can start.
 
-Deliverables: execution plan with task table in `plans/`.
+Deliverables: execution plan in `plans/` (narrative companion only) **paired with a Beads epic and child stories** (live task state). The plan file references the Beads epic in its header; the Beads epic owns the slice list and status. See §2 for the canonical task-state model.
 
 ### Phase 5: Implementation
 
@@ -74,42 +100,60 @@ Execute slices against plans with quality gates. See sections below for tracking
 
 ---
 
-## 2. Plan Tracking
+## 2. Plans and the Beads Tracker
 
-Every plan document in `plans/` has an **Action Plan** section with a task table.
+### Plans are narrative; Beads is live task state
 
-### Task Table Format
+- **A plan file** (`plans/NN-*.md`) is the narrative companion to a Beads epic: scope, rationale, architecture, site maps, tile mappings, open questions, references. Plans do **not** contain task tables.
+- **The Beads epic** owns the task list as child stories, with labels, dependencies, statuses, and notes.
+- Every plan has a one-line header at the top referencing its parent Beads epic. Every Beads epic has a link back to its plan in its description or notes.
 
-```markdown
-| ID | Phase | Task | Status | Notes |
-|---|---|---|---|---|
-| 01-001 | 1 | Task description | Done | Completed notes |
-| 01-002 | 1 | Task description | In Progress | What's done, what remains |
-| 01-003 | 1 | Task description | Not Started | |
-```
+### Plan file structure
 
-### Status Values
+A plan file typically contains:
 
-| Status | Meaning |
-|---|---|
-| Not Started | Work has not begun |
-| In Progress | Work has started but is not complete |
-| Done | Fully implemented, tested, and validated |
-| Removed | Out of scope; explain why |
+- **Beads epic:** link/ID to the parent epic
+- **Purpose** — why this plan exists
+- **Governing principles** — link to relevant rules / ADRs
+- **Architecture or pattern narrative** (authority models, URL structures, etc.)
+- **Site map / structural references** (where applicable)
+- **Tile → destination mapping** (for reorgs; these are structural, not status)
+- **Open questions** (unresolved product/contract calls)
+- **Backend contract questions** (when applicable)
 
-### Required Workflow
+What a plan file does **not** contain:
+
+- Task tables with slice numbers, status columns, or Done markers
+- Duplicated rule text or persona responsibilities
+- Per-slice completion notes (those live in the Beads story closing notes)
+
+### Beads is the canonical task state
+
+- Every active slice is a Beads story (child of a plan's epic).
+- Status transitions (`open` → `in_progress` → `closed`/`deferred`) happen in Beads as work starts and completes.
+- Slice context, scope changes, and closeout notes go in the Beads story's notes field.
+- When a slice closes, the plan file is not edited — the Beads closeout captures the execution record. The plan file is updated only when scope, architecture, or open questions change.
+
+### When a plan dies
+
+- When the parent Beads epic closes (all child stories closed or deferred), the plan file is **deleted** in a cleanup commit.
+- Durable patterns/decisions the plan established must be codified in `rules/` or `docs/adr/` before deletion. A plan that introduced a new convention without updating rules/ADRs is not ready to be deleted.
+- Git preserves the deleted file; it can be retrieved via `git log` / `git show` if historical context is needed.
+- Do **not** move completed plans to `plans/archive/`. Archive directories grow and get read; deletion is the enforcement mechanism.
+
+### Required workflow per slice
 
 When starting work:
 
-1. Find the relevant task in the plan.
-2. Mark it `In Progress`.
-3. Add notes about the implementation slice you are taking.
+1. Find or create the relevant Beads story under the plan's epic.
+2. Update the Beads story status to `in_progress` and add a starting note describing the planned approach.
+3. Read the plan narrative for the slice context.
 
 When finishing work:
 
-1. Mark the task `Done` or `Removed`.
-2. Add notes with the relevant files and decisions.
-3. Update every affected plan, not just the first one you looked at.
+1. Close the Beads story with a closeout note describing files changed, decisions made, and validation run.
+2. Update the plan narrative only if scope, architecture, or open questions changed — not for status.
+3. If the parent epic is now complete, delete the plan file in the same or next commit (after capturing any durable patterns in `rules/` or an ADR).
 
 ---
 
@@ -119,8 +163,8 @@ When finishing work:
 - Report every changed file in the final handoff for a slice.
 - If slice work exposes adjacent-slice files or tasks, stop and report that spillover instead of bundling it.
 - Coverage threshold changes are main-thread coordination work. Worker slices must not raise or lower thresholds on their own.
-- Update plan rows only for the exact slice being worked. Do not mark unrelated items `Done`.
-- Mark a slice `Done` only when all applicable layers are complete and validated. Partial work stays `In Progress`.
+- Update Beads state only for the exact slice being worked. Do not flip unrelated stories to `in_progress` or `closed`.
+- Close a Beads story only when all applicable layers are complete and validated. Partial work stays `in_progress`.
 - A slice is not finished while any relevant required local test suite for that slice is still failing. "Implementation complete" without green relevant local validation is still `In Progress`, not `Done`.
 - Targeted validation does not override the required repo gate set. When the rules call for full unit, functional, coverage, typecheck, or lint gates, those gates must be run even if focused nearby tests already passed.
 - If a slice is pushed after only focused validation and CI then fails in a required gate that was skipped locally, treat that as a workflow miss in the slice closeout, not as an acceptable CI discovery pattern.
@@ -319,35 +363,37 @@ For browser-E2E planning, prefer real user/role lifecycle flows over root-admin 
 
 ## 9. Persona Playbooks
 
-- Persona playbooks may live under `agents/` to scope role-specific workflows such as product management, technical specification, data modeling, project management, backend implementation, frontend implementation, architecture/platform work, and code review.
+- Persona playbooks live under `personas/<name>.md` as the single authoritative source of persona content, with tool-specific thin-pointer wrappers under `.claude/skills/`, `.claude/agents/`, `.agents/skills/` (Codex), and `.codex/agents/`. The thin-pointer pattern: each wrapper carries minimal frontmatter + a "MUST Read `personas/<name>.md`" instruction; no symlinks, no build step. See `/Users/DDorazio/development/persona-library-pattern.md` (or your team's equivalent) for the full pattern reference.
+- Personas scope role-specific workflows: product management, backend implementation, data modeling, frontend implementation, test planning, architecture/platform work, and code review. Piper (product discovery) and Tom (technical specification) are dormant — only invoked explicitly for greenfield / major-feature framing.
 - These playbooks are execution aids, not replacement policy sources.
 - `AGENTS.md` and `rules/` remain canonical.
-- Formal persona names remain the canonical workflow language in plans, rules, and handoffs. Nicknames are optional shorthand for prompts, logs, worker updates, and conversational references.
+- Formal persona names remain the canonical workflow language in plans, rules, and handoffs. Nicknames are optional shorthand for prompts, logs, and conversational references.
 - When a nickname is used, it must map to exactly one formal persona and must not replace the formal responsibility definition.
 - If a new persona is added later, assign a unique nickname in the persona file and add it to the table below rather than inventing ad hoc shorthand in worker prompts.
 
 Current persona nickname map:
 
-| Formal Persona | Nickname | Notes |
-|---|---|---|
-| Product Discovery | Piper | High-level product framing, PRD shaping, and discovery handoff |
-| Product Manager | Pam | Product/use-case clarification and review |
-| Technical Specification Creator | Tom | Converts product requirements into feature-level technical specifications with Dom |
-| Data Modeler | Dom | Model and contract impact classification |
-| Backend Developer | Brad | Service, DTO, OpenAPI, and test implementation |
-| Frontend Developer | Fran | Web UI and browser-flow delivery |
-| Project Manager | Parker | Plan shaping, sequencing, and reconciliation |
-| Architect | Archie | Cross-cutting architecture and platform work |
-| Test Planner | Tess | Test case derivation from specs, test matrix, coverage audits |
-| QA/Test Engineer | Quinn | Verification lane selection, test execution, failure triage, release confidence |
-| Code Reviewer | Riley | Findings-first code review and risk detection |
+| Formal Persona | Nickname | Shape | Notes |
+|---|---|---|---|
+| Product Discovery | Piper | Dormant skill | High-level product framing, PRD shaping, discovery handoff. Greenfield only. |
+| Product Manager | Pam | Active skill | Product/use-case clarification and review. |
+| Technical Specification Creator | Tom | Dormant skill | Pre-implementation tech specs for major new features. |
+| Application Specification Builder | Abe | Active skill (dormant in standard lifecycle) | One-time spec extraction from existing implementations without structured requirements. |
+| Data Modeler | Dom | Active skill | Model and contract impact classification. |
+| Test Planner | Tess | Active skill | Test case derivation from specs, test matrix, coverage audits. |
+| Backend Developer | Brad | Active skill | Service, DTO, OpenAPI, and test implementation. |
+| Frontend Developer | Fran | Active skill | Web UI and browser-flow delivery. |
+| Architect | Archie | Active skill | Cross-cutting architecture and platform work. |
+| QA/Test Engineer | Quinn | **Subagent** | Verification lane selection, test execution, failure triage, release confidence. Isolated context; produces findings reports. |
+| Code Reviewer | Riley | **Subagent** | Findings-first code review and risk detection. Isolated context; produces findings reports. |
+
+The old Project Manager (Parker) persona was retired because its responsibilities are fully subsumed by Beads (task state and dependencies), narrative-only plans (no plan rows to reconcile), the slice-completion checklist (drift detection), and the delete-on-ship rule for plans (no archival to manage).
 
 - Cross-cutting workflow requirements remain mandatory for all personas, including:
-  - Checking for active plans
-  - Updating task rows for the exact slice worked
-  - Validating work before marking slices done
+  - Checking for active plans and Beads epics
+  - Updating the Beads story state for the exact slice worked
+  - Validating work before closing Beads stories
   - Updating docs and rules when the change affects them
-- The `project-manager` persona may help with plan shaping, sequencing, and progress reconciliation, but it is not the sole owner of task tracking. Agents doing implementation work must still update plans themselves.
 
 ### Frontend / Data Model / Backend Handoff Rules
 
@@ -374,9 +420,11 @@ Current persona nickname map:
 
 ---
 
-## 10. Plan Closeout and Archiving
+## 10. Plan Deletion and Durable-Decision Capture
 
-- Plans are execution tools, not long-lived policy documents. Durable rules belong in `rules/`, not in active plans.
-- When all tasks in a plan are done or removed, archive it under `plans/archive/`.
-- Update any active plans that reference the archived plan.
+- Plans are execution tools, not long-lived policy documents. Durable rules belong in `rules/` or `docs/adr/`, not in active plans.
+- When the parent Beads epic closes (all child stories closed or deferred), the plan file is **deleted** in the same commit or an immediately following cleanup commit.
+- Before deleting a plan, verify that durable patterns, conventions, or boundaries the plan introduced have been codified in `rules/` (for patterns) or `docs/adr/` (for cross-cutting decisions). A plan that introduced durable guidance without updating those layers is not ready to delete.
+- Do **not** move plans to an archive directory. Git preserves deleted files; archives just replicate the clutter problem under a different name.
+- For historical context, rely on `git log` and `git show`. If a specific decision warrants permanent attention, write an ADR.
 - If a plan contained temporary guidance that has become durable policy, move it into `rules/` during closeout.
