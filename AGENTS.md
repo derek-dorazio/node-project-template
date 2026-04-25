@@ -12,7 +12,9 @@ All agents working in this repo should:
 
 ## Non-Negotiables
 
-- Never add mock data, fake data, or hardcoded sample responses to application code.
+- **Never modify application code to make a test pass or fail predictably.** No mock data, fake data, hardcoded sample responses, synthetic fallbacks, "test mode" branches, swallowed errors, or test-only code paths in production source. Mocks/fakes/fixtures live exclusively in test code. See `rules/testing-rules.md` §2C *Forbidden Application-Code Patterns*. Riley flags any instance as a CRITICAL finding and blocks merge.
+- **Defect-fix slices must include a failing test before the fix.** The slice must demonstrate that a test reproducing the defect fails on the broken code, then passes on the fixed code. See `rules/testing-rules.md` §2B *Defect Verification Protocol*.
+- **Every test references a use-case, business-rule, or defect ID.** Describe block, test name, or leading comment — see `rules/testing-rules.md` §2A *Test Self-Documentation*.
 - Fix real architecture and contract problems before adjusting tests around them.
 - Keep the API contract chain in sync: Zod DTOs, route schemas, OpenAPI spec, generated clients, and frontend consumers.
 - Update plans and rules when architecture changes — in the same work, not later.

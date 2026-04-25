@@ -82,6 +82,122 @@ When a slice is instrumenting logging or auditing branch behavior, the testing g
 
 ---
 
+## 2A. Test Self-Documentation
+
+Every test must announce *what it is testing* in machine-readable, reviewable form. A test that doesn't explain its purpose is treated as missing for the purposes of the slice-completion checklist and Riley review.
+
+### Required for new tests
+
+For **every new test** added in a slice, the describe block, test name, or a leading comment must reference one of:
+
+- **A documented use-case ID** (e.g., `UC-LM-003 — Owner cannot delete a league with active members`). Use the use-case ID format from `requirements/product-requirements/features/<feature>/use-cases.md`.
+- **A documented business rule ID** when no use case applies cleanly (e.g., `BR-AUTH-12 — Sessions expire after 24h`).
+- **A defect ID** for regression tests (e.g., `bd-#142 — Status field returned as null after archive`).
+
+The reference must be specific. `// covers leagues feature` is not enough; `// UC-LM-003: owner-archive blocks deletion` is.
+
+### Required for existing tests touched by a slice
+
+If the slice modifies an existing test's behavior (assertion, setup, expected value), update the traceability comment if the use-case or business rule it covers has shifted. Stale references are worse than missing ones.
+
+### Format
+
+Three forms are acceptable; pick the one that fits the test layer:
+
+- **Describe-block prefix** — preferred for grouping related cases:
+  ```typescript
+  describe('UC-LM-003: Owner archive blocks deletion', () => { ... })
+  ```
+- **Test-name prefix** — preferred for one-off cases:
+  ```typescript
+  it('UC-LM-003: rejects DELETE when status=archived', async () => { ... })
+  ```
+- **Leading comment** — acceptable when the test name is already long:
+  ```typescript
+  // UC-LM-003 — owner-archive blocks deletion
+  it('returns 409 with code LEAGUE_ARCHIVED', ...)
+  ```
+
+### When use-case-style traceability does not apply
+
+For genuinely infrastructure-only tests (e.g., a utility helper, a serialization edge case with no product-visible flow), reference the rule or pattern it enforces — not just "tests serializeDate." Example: `// rule: ISO 8601 over the wire (service-rules §4)`. If neither a use case, business rule, defect, nor rule reference applies, the test probably should not exist.
+
+### Why
+
+Riley and Quinn rely on these references to audit coverage; future agents rely on them to know which tests to update when a use case changes; reviewers rely on them to confirm the slice tested what it claimed.
+
+---
+
+## 2B. Defect Verification Protocol
+
+For any slice whose purpose is to fix a defect (a bug, a regression, a wrong-behavior report), the slice must include both:
+
+1. **A failing test that reproduces the defect** *on the broken code*. The test asserts the expected correct behavior and demonstrates that the unfixed code violates it.
+2. **The fix** that makes the test pass without weakening any unrelated test.
+
+### Required ordering and visibility
+
+The slice must make both halves visible in its history:
+
+- **Preferred:** two commits — `commit 1` adds the failing test (and may temporarily mark it `it.skip` only if absolutely required to keep `main` green; this is rare). `commit 2` lands the fix and unmarks the test. Both reference the same `bd-#NNN` defect ID.
+- **Acceptable:** one commit when adding the failing test alone would block other work. The PR description must then explicitly state that the test was written first and observed to fail before the fix landed, and the Beads story closing note must record the failing-then-passing observation.
+
+The intent is reviewable proof that the test actually catches the defect — not retrofit confidence after the fact.
+
+### Test placement
+
+The failing test goes in the layer that most naturally proves the defect:
+
+- API-visible bug → functional API test
+- Persistence/query bug → data integration test
+- Pure logic bug → unit test
+- UI bug → frontend integration / Playwright test
+
+Adding the test only at a layer where it cannot actually catch the defect (e.g., a unit test for a bug that only reproduces with a real DB) does not satisfy this rule.
+
+### Traceability
+
+The failing/passing test must reference the defect ID per §2A — `bd-#NNN — <one-line defect description>`.
+
+### When this rule does not apply
+
+- Slices that add genuinely new behavior (no prior code path to defect against) — the use-case coverage rules in §2 still apply; the defect-protocol does not.
+- Slices that refactor without behavior change and are covered by existing tests.
+- Slices whose only purpose is documentation, dependency bumps, or test-infrastructure work.
+
+---
+
+## 2C. Forbidden Application-Code Patterns
+
+Tests exist to exercise real production code paths. Production code must never be modified to accommodate tests.
+
+### Forbidden in application code
+
+- **Hardcoded sample responses** — `if (id === 'test-123') return { … }`.
+- **Synthetic fallbacks** — returning a fabricated default object when the real lookup fails, *for the purpose of making a test pass*.
+- **"Test mode" branches** — `if (process.env.NODE_ENV === 'test') { … behave differently … }` to produce predictable test outputs.
+- **Mock data baked into production paths** — seed-style records, stub user accounts, or placeholder entities that production-flow code returns.
+- **Suppressed errors that production should surface** — swallowing a real error so a test that expected success doesn't fail.
+- **Branches that exist solely to fail in a controlled way under test** — code structured to *fail* unnaturally so a test can assert that failure.
+
+If a test cannot be made to pass against real production code, the conclusion is one of:
+
+1. The production code has a real defect — fix it.
+2. The test is asserting something the contract does not actually require — fix the test.
+3. The behavior is not exercisable at this layer — move the test to a layer where it is.
+
+The conclusion is **never** "modify the production code to make the test pass."
+
+### Where mocks and fakes belong
+
+Mocks, fakes, builders, fixtures, MSW handlers, and `nock` interceptors live in **test code** (`tests/**`, `*.test.ts`, `*.spec.ts`, `clients/**/test/**`, MSW handler modules). They never live in `packages/`, `clients/<projectName>/src/`, or any other production source path.
+
+### Repository surface
+
+If you find yourself adding any of the patterns above to make a slice pass, **stop**. Surface the conflict to the user before proceeding. This is a hard rule — Riley flags any instance as a CRITICAL finding and blocks merge.
+
+---
+
 ## 3. Required Local Quality Gates
 
 Before pushing code:
@@ -158,7 +274,7 @@ Files use `.functional.ts` suffix: `<feature>-lifecycle.functional.ts`, `auth.fu
 
 ### Use-Case Traceability
 
-Every functional test must trace to a documented use case. Reference the plan and use-case ID in a comment or describe block name.
+Every functional test must trace to a documented use case, business rule, or defect ID per §2A. Reference the ID in the describe block, test name, or a leading comment.
 
 ### Data Strategy
 
@@ -394,7 +510,7 @@ Do not rely on only one layer when the released behavior spans multiple risks. A
 
 ### Use-Case Traceability
 
-Every smoke and E2E test must trace to a documented use case. Reference the plan and use-case ID.
+Every smoke and E2E test must trace to a documented use case, business rule, or defect ID per §2A.
 
 ### API Smoke Tests
 
@@ -534,6 +650,9 @@ Do not keep bad tests just because they already exist.
 - Do not update mocks without checking whether the real contract changed.
 - Do not hand-wave broken contract verification as "just generated client issues."
 - Do not skip OpenAPI validation after changing route schemas.
+- Do not modify application code to make a test pass — see §2C *Forbidden Application-Code Patterns*. The conclusion is never "add a hardcoded response, fallback, or test-only branch to production code."
+- Do not write a defect-fix slice without first writing a failing test that catches the defect — see §2B *Defect Verification Protocol*.
+- Do not add a new test without a use-case, business-rule, or defect ID reference — see §2A *Test Self-Documentation*.
 
 ---
 
