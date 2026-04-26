@@ -98,6 +98,20 @@ The auto-merge gate (zero CRITICAL/HIGH = merge; any CRITICAL/HIGH = block) only
 
 For systematic test-completeness audits (every use case, error path, screen state covered), see Tess's test matrix and coverage audit.
 
+### Test-Disable Discipline (always HIGH)
+
+Scan changed test files for any of these markers introduced by the slice:
+
+- [ ] `it.skip(...)`, `xit(...)`, `test.skip(...)`, `xtest(...)`
+- [ ] `describe.skip(...)`, `xdescribe(...)`
+- [ ] `it.todo(...)`, `test.todo(...)`
+- [ ] `it.fails(...)`, `test.fails(...)`, `it.failing(...)`
+- [ ] Test files renamed to `.skip.test.ts` or moved into a `skipped/` directory
+- [ ] `pending(...)` calls inside a test body
+- [ ] Early-`return` from a test body that bypasses assertions
+
+For each match, verify the slice introduced an adjacent `SKIP: bd-#NNN` comment and that the referenced Beads story actually exists. Any skip without a comment, or with a comment whose Beads story does not exist, is a **TEST / HIGH** finding and blocks merge. Reference `rules/testing-rules.md` §2D in the finding details.
+
 ### Forbidden Application-Code Patterns (always CRITICAL)
 
 Scan changed application source paths (`packages/**/src/`, `clients/**/src/`, anywhere outside `tests/**` and `*.test.ts`/`*.spec.ts`) for any of these patterns introduced by the slice:
