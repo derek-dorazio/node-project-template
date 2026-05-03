@@ -38,7 +38,18 @@
     "api:export": "npm run build --workspace @<projectName>/shared && node --import tsx packages/core-api/scripts/export-openapi.ts",
     "api:generate": "cd packages/shared && npx @hey-api/openapi-ts",
     "api:validate": "node scripts/validate-openapi.mjs",
+    "api:check": "node scripts/check-openapi-fresh.mjs",
     "api:refresh": "npm run api:export && npm run api:generate && npm run api:validate",
+
+    "rules:check:no-mocked-api": "node scripts/check-no-mocked-api.mjs --warn-only",
+    "rules:check:route-discipline": "node scripts/check-route-discipline.mjs --warn-only",
+    "rules:check:test-traceability": "node scripts/check-test-traceability.mjs --warn-only",
+    "rules:check:test-disable": "node scripts/check-test-disable-discipline.mjs",
+    "rules:check:unsafe-casts": "node scripts/check-unsafe-casts.mjs --warn-only",
+    "rules:check:shared-ui-controls": "node scripts/check-shared-ui-controls.mjs --warn-only",
+    "rules:check:form-query-mirror": "node scripts/check-form-query-mirror.mjs --warn-only",
+    "rules:check:pr-riley-marker": "node scripts/check-pr-riley-marker.mjs",
+    "rules:check": "npm run rules:check:no-mocked-api && npm run rules:check:route-discipline && npm run rules:check:test-traceability && npm run rules:check:test-disable && npm run rules:check:unsafe-casts && npm run rules:check:shared-ui-controls && npm run rules:check:form-query-mirror",
 
     "db:migrate": "cd packages/core-api && npx prisma migrate dev",
     "db:seed": "cd packages/core-api && npx prisma db seed",
