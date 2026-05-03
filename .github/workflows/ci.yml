@@ -1,0 +1,293 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck:
+    name: lint-and-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npm run build --workspace @<projectName>/shared
+      - name: Rule enforcement checks
+        run: npm run rules:check
+      - name: Generated API freshness
+        run: npm run api:check
+      - name: Riley findings marker (PRs only)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/check-pr-riley-marker.mjs
+      - name: Lint full repo
+        run: npm run lint
+      - name: Typecheck full repo
+        run: npm run typecheck
+
+  # =========================================================================
+  # Backend Tests + Merged Coverage
+  # =========================================================================
+  service-coverage-report:
+    name: service-coverage-report
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: <projectName>_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/<projectName>_test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy --schema=packages/core-api/prisma/schema.prisma
+
+      - name: Run merged service coverage
+        run: npm run test:coverage:service:merged
+
+      - name: Service coverage summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const summary = process.env.GITHUB_STEP_SUMMARY;
+          const sections = [
+            ['Service Unit Coverage', 'coverage/service-unit/coverage-summary.json'],
+            ['Service Integration Coverage', 'coverage/service-integration/coverage-summary.json'],
+            ['Service Functional API Coverage', 'coverage/service-functional-api/coverage-summary.json'],
+            ['Merged Service Coverage', 'coverage/service-merged/coverage-summary.json'],
+          ];
+
+          const markdown = ['### Service Coverage'];
+          let foundAny = false;
+
+          for (const [label, filePath] of sections) {
+            if (!fs.existsSync(filePath)) {
+              markdown.push('', `#### ${label}`, '', 'Coverage data not available');
+              continue;
+            }
+            foundAny = true;
+            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            const t = data.total;
+            markdown.push(
+              '',
+              `#### ${label}`,
+              '',
+              '| Metric | Coverage |',
+              '|---|---:|',
+              `| Statements | ${t.statements.pct}% |`,
+              `| Branches | ${t.branches.pct}% |`,
+              `| Functions | ${t.functions.pct}% |`,
+              `| Lines | ${t.lines.pct}% |`,
+            );
+          }
+
+          if (!foundAny) {
+            markdown.push('', 'Coverage data not available');
+          }
+
+          fs.appendFileSync(summary, markdown.join('\n') + '\n');
+          NODE
+
+      - name: Upload service coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-service-report
+          path: |
+            coverage/service-merged/coverage-summary.json
+            coverage/service-merged/lcov.info
+            coverage/service-merged/clover.xml
+            coverage/service-merged/coverage-final.json
+            coverage/service-merged/lcov-report/**
+            coverage/service-unit/**
+            coverage/service-integration/**
+            coverage/service-functional-api/**
+          if-no-files-found: warn
+
+  # =========================================================================
+  # Web App Unit Tests + Coverage (Vitest)
+  # =========================================================================
+  webapp-unit-tests:
+    name: webapp-unit-tests
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --workspace @<projectName>/shared
+
+      - name: Run web app unit tests with coverage
+        run: npm run test:<projectName>:unit -- --coverage
+
+      - name: Web app unit coverage summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'clients/<projectName>/coverage/coverage-summary.json';
+          const summary = process.env.GITHUB_STEP_SUMMARY;
+
+          if (!fs.existsSync(path)) {
+            fs.appendFileSync(summary, '### Web App Unit Coverage\n\nCoverage data not available\n');
+            process.exit(0);
+          }
+
+          const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const t = data.total;
+          fs.appendFileSync(
+            summary,
+            [
+              '### Web App Unit Coverage',
+              '',
+              '| Metric | Coverage |',
+              '|---|---:|',
+              `| Statements | ${t.statements.pct}% |`,
+              `| Branches | ${t.branches.pct}% |`,
+              `| Functions | ${t.functions.pct}% |`,
+              `| Lines | ${t.lines.pct}% |`,
+              '',
+            ].join('\n'),
+          );
+          NODE
+
+      - name: Upload web app unit coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-webapp-unit
+          path: |
+            clients/<projectName>/coverage/coverage-summary.json
+            clients/<projectName>/coverage/lcov.info
+            clients/<projectName>/coverage/clover.xml
+            clients/<projectName>/coverage/coverage-final.json
+          if-no-files-found: warn
+
+  coverage-summary:
+    name: coverage-summary
+    runs-on: ubuntu-latest
+    needs: [service-coverage-report, webapp-unit-tests]
+    if: always()
+    steps:
+      - name: Download service coverage artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-service-report
+          path: coverage-artifacts/service
+
+      - name: Download web app unit coverage artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage-webapp-unit
+          path: coverage-artifacts/webapp
+
+      - name: Consolidated coverage summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const summary = process.env.GITHUB_STEP_SUMMARY;
+          const reports = [
+            ['Service', 'coverage-artifacts/service/service-merged/coverage-summary.json'],
+            ['Web App Unit', 'coverage-artifacts/webapp/coverage-summary.json'],
+          ];
+
+          const rows = reports.map(([name, path]) => {
+            if (!fs.existsSync(path)) {
+              return `| ${name} | not available | not available | not available | not available |`;
+            }
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const t = data.total;
+            return `| ${name} | ${t.statements.pct}% | ${t.branches.pct}% | ${t.functions.pct}% | ${t.lines.pct}% |`;
+          });
+
+          fs.appendFileSync(
+            summary,
+            [
+              '## Coverage Summary',
+              '',
+              '| Suite | Statements | Branches | Functions | Lines |',
+              '|---|---:|---:|---:|---:|',
+              ...rows,
+              '',
+            ].join('\n'),
+          );
+          NODE
+
+  # =========================================================================
+  # Build verification
+  # =========================================================================
+  service-build:
+    name: service-build
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate --schema=packages/core-api/prisma/schema.prisma
+      - run: npm run build:service
+
+  webapp-build:
+    name: webapp-build
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:<projectName>
+
+  # =========================================================================
+  # Deploy track — add per-project as needed.
+  # =========================================================================
+  # Pool-master's source workflow includes publish-images / migrate-qa /
+  # browser-e2e jobs that build Docker images, push to ECR, register ECS
+  # task definitions, and deploy to QA. Those are project-specific and
+  # are intentionally not ported here. Add deploy jobs to this workflow
+  # when the project's deployment shape is decided. Reference
+  # docs/CI-AND-QUALITY-GATES.md for the gate model that the deploy
+  # track will run on top of.
