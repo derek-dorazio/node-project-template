@@ -38,12 +38,13 @@ broken code before the fix landed. Evidence: <commit SHA / referenced line>.
 
 - [ ] `npm run typecheck`
 - [ ] `npm run lint`
+- [ ] `npm run rules:check`
+- [ ] `npm run api:check` (if API schemas changed)
 - [ ] `npm run test:service:unit`
 - [ ] `npm run test:service:integration`
 - [ ] `npm run test:service:functional-api`
 - [ ] `npm run test:coverage:service:merged`
 - [ ] `npm run test:<projectName>:unit`
-- [ ] `npm run openapi-contract-check` (if API schemas changed)
 
 ## Known concerns
 
@@ -52,6 +53,20 @@ Anything you noticed but consciously chose not to fix in this slice
 (and why), or anything you're uncertain about. Naming concerns up
 front prevents Riley from "discovering" them as findings.
 Write "None" if there are none.
+-->
+
+## Riley findings
+
+<!-- riley:findings -->
+Pending Riley review.
+
+<!--
+Replace "Pending Riley review." above with the findings table once Riley
+has reviewed. Use "No findings." if Riley reported zero. The marker line
+above (the riley:findings HTML comment) MUST remain in the PR body — CI
+greps every PR for it via npm run rules:check:pr-riley-marker and will
+fail the build if it is missing. See rules/workflow-rules.md §11 and
+personas/riley.md.
 -->
 
 ## Riley auto-merge gate
