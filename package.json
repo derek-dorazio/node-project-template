@@ -35,7 +35,7 @@
     "test:smoke:e2e": "cd clients/<projectName> && npx playwright test",
     "test:smoke": "npm run test:smoke:api && npm run test:smoke:e2e",
 
-    "api:export": "cd packages/core-api && node -e \"require('./dist/index.js')\" --export-openapi",
+    "api:export": "npm run build --workspace @<projectName>/shared && node --import tsx packages/core-api/scripts/export-openapi.ts",
     "api:generate": "cd packages/shared && npx @hey-api/openapi-ts",
     "api:validate": "node scripts/validate-openapi.mjs",
     "api:refresh": "npm run api:export && npm run api:generate && npm run api:validate",
