@@ -24,6 +24,16 @@ The repository uses layered artifacts. Each artifact has a clear lifetime and a 
 4. **Capture durable decisions as ADRs.** Decisions that outlast a single slice (architectural choices, cross-cutting patterns, hard boundaries) are written as Architecture Decision Records in `docs/adr/`. Once accepted, ADRs are immutable; supersede with a new ADR rather than editing.
 5. **Rules absorb what plans learn.** If a plan introduces a durable pattern (a new convention, a hard boundary, a reusable approach), update `rules/` or write an ADR in the same effort. Don't leave the pattern only in the plan — it will be deleted when the epic closes.
 
+### Production-Source Lifecycle
+
+The "Delete on ship, don't archive" rule applies to production source files, not just plans, tech specs, and archived directories.
+
+When a slice lands a refactor that obsoletes a file (no incoming references in production app code), the slice must delete the file. Carrying a dead file forward "in case it gets reused later" is a known failure mode that produces large unused components kept alive only by their own tests.
+
+Riley scans for dead code on every PR. A grep for files in `features/` that have no incoming imports outside their own directory is a HIGH finding.
+
+The same applies to `dist/` build artifacts, archive directories (`clients/_archived/*` and similar), and any other "carried forward but unreferenced" content.
+
 ---
 
 ## 1. Spec-Driven Development Lifecycle
@@ -260,6 +270,14 @@ Routine operations:
 - `bd dep add bd-#A blocked-by bd-#B` — declare a dependency.
 
 See `bd help` for the full surface.
+
+### Periodic Cross-Stack Review
+
+The slice-level pre-commit grep set catches forward drift but does not catch debt that accumulates across slices: dozens of inline authority checks, repeated helper duplication, scattered `as any` casts. At least once per quarter, run a cross-stack review (`Brad` / `Fran` / `Archie` working in parallel against the live codebase) producing a code-review epic.
+
+Findings group into thematic sub-epics. CRITICAL and HIGH findings must have an owner and target slice within four weeks. MEDIUM and LOW findings may be deferred indefinitely or rolled into ongoing cleanup work.
+
+Schedule the next review whenever the previous one closes — not on a fixed calendar — to avoid an audit collapsing onto an unrelated sprint.
 
 ---
 
@@ -560,9 +578,10 @@ When an implementing persona (Brad, Fran, Archie, Dom, etc.) finishes a slice, t
 2. **Run all required local gates** (`rules/testing-rules.md` §3). Do not push on a "likely green" assumption.
 3. **Commit** with the Beads story ID in the footer: `bd-#NNN`. One slice = one commit (squash later in the PR if multiple working commits exist).
 4. **Push the branch** to origin.
-5. **Open a PR** with `gh pr create`. Title: short imperative summary. Body: link to the parent Beads epic, the slice's Beads story (`bd-#NNN`), one-paragraph context, and the gates that were run. For defect-fix slices, the PR body must explicitly state that the failing test was observed to fail before the fix landed.
+5. **Open a PR** with `gh pr create`. Title: short imperative summary. Body: link to the parent Beads epic, the slice's Beads story (`bd-#NNN`), one-paragraph context, and the gates that were run. For defect-fix slices, the PR body must explicitly state that the failing test was observed to fail before the fix landed. The PR body must also include the Riley findings marker section described in step 7 — open the PR with the placeholder text in place; the actual findings table replaces the placeholder once Riley has reviewed.
 6. **Spawn Riley** as a subagent using the canonical spawn prompt below — Riley's review quality depends on what you pass.
-7. **Read Riley's findings table.** Then:
+7. **Record Riley's findings in the PR body.** Replace the placeholder under the literal HTML comment `<!-- riley:findings -->` with Riley's findings table (or "No findings." if Riley reported zero). The marker is non-negotiable — CI greps the PR body for it on every PR via `npm run rules:check:pr-riley-marker`, and a PR without it cannot merge. The marker is auditable proof the review happened, not a substitute for the review itself.
+8. **Read Riley's findings table.** Then:
    - **Zero blocker-severity findings** (CRITICAL or HIGH) → `gh pr merge --squash --delete-branch`. Close the Beads story with a closing note per §2 *Beads conventions: story notes*. Return to the user with a summary.
    - **Any blocker-severity findings** → **do not merge**. Surface the findings to the user, await direction (fix-and-re-review, merge-anyway-with-justification, or park).
 

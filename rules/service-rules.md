@@ -25,6 +25,23 @@ These rules govern backend services, especially Fastify modules, Prisma-backed s
 - Shipping sentinel fallback values such as `''`, `'UNKNOWN'`, or similar invented placeholders in API-facing service output
 - Hand-editing generated OpenAPI/client output
 - Fixing generated-client problems with frontend casts instead of repairing backend schemas
+- Returning fabricated default objects when a lookup fails (see §1A)
+
+---
+
+## 1A. No Synthetic Lookups
+
+When a service receives a request for a specific entity that does not exist, it must throw a typed `*NotFoundError`. Returning a fabricated default object is forbidden — `{ totalScore: 0, items: [] }`, `{ name: '', count: 0 }`, `{ id, status: 'UNKNOWN' }` are all banned.
+
+Synthetic defaults hide programmer errors and cross-entity mismatches behind a believable-looking response. They also defeat consumers' ability to distinguish "no data" from "data missing."
+
+This rule applies even when:
+
+- The caller appears to handle the missing case gracefully.
+- The default value "feels safe" (zero score, empty list).
+- The endpoint historically returned a synthetic default.
+
+Tests that lock in synthetic-default behavior are §2C (testing-rules) violations regardless of when they were written.
 
 ---
 
@@ -79,7 +96,7 @@ Every module that registers Fastify routes **must** have a corresponding mapper 
 
 - Inline `.map()` transformations in route handlers or handler files are not acceptable.
 - The mapper is the single place where persistence/domain shapes are translated to API response shapes.
-- Modules exempt from this rule: `config` (static data only), `health` (no domain objects).
+- Modules without persisted entities are exempt: `config` (static data), `health` (no domain objects). **Any module that touches Prisma — directly or through a service that does — must have a mapper file before its first route ships.** Adding a new route to a mapper-less module is forbidden; fix the mapper gap first, in the same slice. The exemption is narrow and not extensible by analogy.
 - Reusing an existing shared DTO on a new route surface does **not** justify local inline shaping in the handler. The route must call a mapper, and if no suitable shared mapper/helper exists yet, creating or extracting one is part of the slice.
 - "Small," "obvious," or "admin-only" response shaping is not an exception. Handler-level DTO assembly is prohibited because it is one of the main ways DTO/domain drift re-enters the codebase.
 
@@ -155,6 +172,30 @@ Do not treat contract documentation as optional polish after the code is correct
 
 ---
 
+## 4A. List Endpoint Discipline — No Pagination
+
+List endpoints return raw arrays of the response DTO: `z.array(ResponseDto)`. Pagination envelopes (`page`, `pageSize`, `total`, `cursor`, `nextPageToken`, etc.) are forbidden in API contracts.
+
+When a list endpoint could return more rows than is comfortable, narrow the result set with **functional filter arguments at the API input** — never with pagination. Examples:
+
+- date range: `?since=2026-01-01&until=2026-02-01`
+- status: `?status=ACTIVE`
+- relationship: `?ownerId=...`, `?parentId=...`
+- domain-specific limits: `?topN=50`, `?aroundId=xyz&radius=10`
+
+The API returns the filtered set as a raw array. The client sorts, slices, and displays as needed.
+
+Adding pagination to a new list endpoint is a deliberate per-endpoint contract decision that requires explicit project-owner approval — it is not the default and it is not recoverable through opt-in.
+
+### Forbidden patterns
+
+- `PaginatedSchema<T>` or any equivalent envelope schema in the shared `dto/` package.
+- `page` / `pageSize` / `cursor` / `limit+offset` / `nextPageToken` query parameters on list endpoints.
+- Frontend pagination components, infinite-scroll loaders, or page-state hooks driving list reads.
+- Workarounds that effectively reintroduce pagination under another name (e.g., `?windowStart=`/`?windowSize=`).
+
+---
+
 ## 5. Prisma and Persistence
 
 - Use Prisma for database access.
@@ -185,6 +226,18 @@ Do not treat contract documentation as optional polish after the code is correct
 
 ---
 
+## 6A. Time and Timezone Discipline
+
+Persisted timestamps are UTC.
+
+Wall-clock-relative computations — "X days prior at HH:MM," "the next Monday at 9am," "tomorrow at noon for the user" — must use a named IANA timezone (typically the user's or the scoping entity's). UTC math for user-visible scheduling is forbidden.
+
+Functions that compute scheduling-relative timestamps must accept a `timezone: string` parameter and reject `undefined`. Default fallback to UTC inside the function body is forbidden — it produces silently wrong wall-clock times for non-UTC users.
+
+Frontend display follows the same discipline (see `react-ui-rules.md`) — render timestamps through a shared `DateDisplay` component or equivalent, never via `new Date(...).toLocaleString()` with default locale and no timezone.
+
+---
+
 ## 7. Error Handling
 
 - Catch exceptions only to add context, translate domain errors, or handle expected failures.
@@ -211,7 +264,7 @@ Rules:
 - Validation errors (400) should include `details` with per-field errors when available.
 - Not-found errors (404) should use domain-specific codes (e.g., `<ENTITY>_NOT_FOUND`).
 - Permission errors (403) should use codes that distinguish the denial reason (e.g., `INSUFFICIENT_PERMISSION`, `NOT_MEMBER`).
-- Intentional application errors must use stable, descriptive, domain-specific codes rather than transport-only placeholders such as `BAD_REQUEST`, `FORBIDDEN`, or `NOT_FOUND` when the domain reason is known.
+- Intentional application errors must use stable, descriptive, domain-specific codes. The fallback codes `BAD_REQUEST`, `INTERNAL_ERROR`, `FORBIDDEN`, `NOT_FOUND` are reserved for genuinely-unknown errors at the global handler boundary only. Mapping a typed `*Error` class to one of these codes is a §7 violation regardless of how "known" the domain reason feels. Every typed `*Error` class declares its own code and statusCode (see §7A).
 - Error codes must be specific enough for clients and tests to distinguish materially different failures that share the same HTTP status.
 - Human-readable messages must explain the real failure clearly without exposing unsafe internals.
 - When useful, `details` should carry structured machine-readable context rather than ad hoc string blobs.
@@ -219,6 +272,47 @@ Rules:
 - Fastify's global error handler should format unhandled errors into this envelope where practical, and new route work should not bypass that standard.
 - Route schemas must declare error response shapes for the most relevant statuses such as 400, 401, 403, and 404.
 - Functional API, contract-verification, or data integration tests must validate representative error response shapes, not just success paths.
+
+---
+
+## 7A. Typed Error Class Discipline
+
+Every domain error class must extend a shared `AppError` base that declares two readonly properties:
+
+- `code: string` — domain-specific machine-readable code (e.g., `RESOURCE_NOT_FOUND`, `INVITATION_TOKEN_INVALID`).
+- `statusCode: number` — the HTTP status to return when this error reaches the global handler.
+
+The Fastify global error handler reads `error.code` and `error.statusCode` directly. It must not switch on `Error.name`. It must not fall back to `BAD_REQUEST` or `INTERNAL_ERROR` when a known domain error class is present.
+
+Adding a typed `*Error` class without `code` and `statusCode` is a slice-completion failure.
+
+Example shape:
+
+```typescript
+abstract class AppError extends Error {
+  abstract readonly code: string;
+  abstract readonly statusCode: number;
+}
+
+class ResourceNotFoundError extends AppError {
+  readonly code = 'RESOURCE_NOT_FOUND' as const;
+  readonly statusCode = 404 as const;
+}
+```
+
+The global handler then becomes:
+
+```typescript
+if (err instanceof AppError) {
+  reply.status(err.statusCode).send({
+    error: { code: err.code, message: err.message },
+  });
+  return;
+}
+// fallthrough: untyped error → 500 INTERNAL_ERROR
+```
+
+No `Error.name` switch. No "known reason" softening. The class declares the code; the handler reads it.
 
 ---
 

@@ -120,7 +120,21 @@ Three forms are acceptable; pick the one that fits the test layer:
 
 ### When use-case-style traceability does not apply
 
-For genuinely infrastructure-only tests (e.g., a utility helper, a serialization edge case with no product-visible flow), reference the rule or pattern it enforces — not just "tests serializeDate." Example: `// rule: ISO 8601 over the wire (service-rules §4)`. If neither a use case, business rule, defect, nor rule reference applies, the test probably should not exist.
+The rule-reference fallback (`// rule: <ref>`) is permitted **only** for:
+
+- `tests/helpers/` (test infrastructure, builders, fixtures)
+- pure-utility unit tests with no product-visible behavior (e.g., `serializeDate`, `parseEnum`, format helpers)
+
+Every test under `clients/<projectName>/src/features/`, `tests/integration/`, `tests/functional/`, and `tests/unit/core-api/modules/` must reference a `UC-`, `BR-`, or `bd-#` ID. The rule-reference fallback is **not** available for those layers. If the test exercises product behavior, find the use case it covers; if no use case applies, the test probably needs one written first or is testing the wrong thing.
+
+Example of acceptable rule-reference fallback (test infrastructure):
+
+```typescript
+// rule: ISO 8601 over the wire (service-rules §4 Response Rules)
+test('serializeDate returns ISO 8601 in UTC', ...)
+```
+
+If neither a use case, business rule, defect, nor narrowly-scoped rule reference applies, the test probably should not exist.
 
 ### Why
 

@@ -103,6 +103,20 @@ Banned patterns:
 
 ---
 
+## 3A. Provider/Adapter Registry Discipline
+
+When a backend module dispatches to one of several pluggable providers (sport-data feeds, payment gateways, identity providers), the registry must be a true factory keyed by provider id. The registry must reject any code path that hardcodes a single allowed id — even if today the only configured provider is a mock.
+
+Mock providers are valid when registered through the same factory pattern as real providers. The defect is not that a mock provider exists; it is when the registry rejects every other id and prevents real adapters from ever being wired.
+
+**Production and staging environments must reject any provider id whose name starts with `mock-` unless an explicit `ALLOW_MOCK_PROVIDERS=true` env override is present and logged at startup.**
+
+**QA and dev environments may use mock providers freely.** No env override is required for non-production runtimes — but the registry must still log the active provider id at startup so the choice is auditable.
+
+Adapter classes that exist in the tree but cannot be reached through the registry are dead code under §3 and must be deleted, regardless of whether they are mocks or real implementations.
+
+---
+
 ## 4. Service Topology
 
 All backend services are TypeScript services with explicit module boundaries.
@@ -131,6 +145,26 @@ The in-process event bus is the primary mechanism for cross-module communication
 - Subscribers must not assume emission order or delivery guarantees beyond "at least once, in process."
 - Event payloads must be serializable (no Prisma models, no class instances, no functions).
 - When adding a new event type, update the event type registry and add emission + subscriber tests.
+
+---
+
+## 4A. Event-Driven Mutation Discipline
+
+Event-driven recalculations that mutate the same persisted state under concurrent emission must be:
+
+1. **Idempotent** — implemented via upsert keyed on stable identifiers, not delete-then-recreate. A second invocation with the same input must produce the same persisted state without intermediate inconsistency.
+2. **Serialized per recalc key** — concurrent emissions targeting the same key (e.g., `aggregateId`) must serialize via Postgres advisory lock or a per-key in-process queue. `Promise.all` over event handlers without isolation is forbidden for state-mutating subscribers.
+3. **Atomic at the recalc boundary** — when a recalc loops over child records, the loop must run inside a single `prisma.$transaction`. Per-iteration transactions inside an unwrapped loop are forbidden — partial failure leaves the system in an inconsistent state with no rollback signal to the caller.
+4. **Backpressured** — fan-out subscribers must coalesce events targeting the same recalc key within a debounce window. One event per source record should not produce N×R recalculations of the same aggregate.
+
+### Subscriber failure policy
+
+Each subscriber must declare an explicit failure policy:
+
+- **Default — isolated, `allSettled`-style.** Subscriber failures are caught at the bus boundary, logged with structured context, and never abort the publish. This is the right policy for the vast majority of subscribers, especially side-effect subscribers (notifications, audit logs, analytics).
+- **Fail-fast** — only when the subscriber is logically inseparable from the publisher and the publisher genuinely needs failure to surface. In that case, justify the choice in code, route the failure through a follow-up event (e.g., `<aggregate>.recalc.failed`), and never propagate as an unhandled publisher reject.
+
+`Promise.all` over event handlers without explicit per-subscriber failure policy is forbidden — it produces accidental cascades where one subscriber's bug aborts every other subscriber's work.
 
 ---
 

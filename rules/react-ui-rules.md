@@ -109,7 +109,7 @@ Do not leave post-mutation cache behavior implicit.
 
 - React Hook Form for non-trivial forms.
 - Validation constraints consistent with backend rules.
-- Reusable form sections over giant monolithic forms.
+- Page components must compose per-section sub-components when over the threshold defined in §5C. Below that threshold, prefer per-section sub-components for clarity but do not split prematurely.
 - Keep UI state distinct from server state.
 - Use Zustand for client-side state only when local component state or query state is insufficient.
 
@@ -126,6 +126,58 @@ Do not leave post-mutation cache behavior implicit.
 - Interactive route transitions, form submissions, and important mutations must provide immediate pending feedback.
 - Do not leave navigation or submissions visually inert while async work is in flight.
 - Pending UI can be subtle, but it must be intentional and visible enough to avoid double submits and dead-end uncertainty.
+
+---
+
+## 5A. Shared-Component & Helper Adoption Gate
+
+Before adding a new bare HTML control to a feature page, check `clients/<projectName>/src/features/shared/ui/`. Specifically:
+
+- `<button>` → use `Button` or `LinkButton`
+- `<input>`, `<textarea>` → use `Input` / `Textarea` inside `FormField`
+- Loading shells, error shells, empty-state shells → use `LoadingState` / `ErrorState` / `EmptyState`
+
+Hand-coding new Tailwind class strings for an existing shared pattern is a slice-completion failure. The shared components carry accessibility plumbing (ARIA wiring, focus management, keyboard handling) that hand-coded copies routinely miss; visual drift across feature pages is the secondary problem.
+
+Before defining a new utility (`formatX`, `extractY`, `parseZ`, helpers operating on dates, errors, roles, statuses), grep `clients/<projectName>/src/lib/` and the relevant `features/<scope>/` directory for existing implementations. Adding a duplicate is a slice-completion failure.
+
+Lint enforcement: a `no-restricted-syntax` rule bans bare `<button>` / `<input>` / `<textarea>` outside `clients/<projectName>/src/features/shared/ui/`. Riley audits the helper-duplication side.
+
+---
+
+## 5B. Server Data Form-State Hazard
+
+Forms whose default values come from a TanStack Query result must seed those defaults at modal-open time. Acceptable patterns:
+
+- React Hook Form `defaultValues` seeded once when the modal opens, with key-based reset (`key={openContext}`).
+- An `enabled`-gated query that pauses while the modal is open.
+
+The following pattern is **forbidden**:
+
+```typescript
+useEffect(() => {
+  setFormState(query.data);
+}, [query.data]);
+```
+
+Refetch will silently overwrite in-progress edits, and the user cannot see why their input disappeared. This is a frequent source of lost user input on commissioner / admin / settings forms.
+
+This rule is independent of the general "no `useEffect` for derived state" rule (§5) because the failure mode is product-visible: lost user input, not just architectural smell.
+
+See also: do not duplicate server data into Zustand. The TanStack Query cache is the single source of truth for server data; Zustand is for client UI state only.
+
+---
+
+## 5C. Page Decomposition Threshold
+
+A page component over **400 LOC** or holding **more than 5 mutations** must be decomposed into:
+
+- per-section components (each visible region of the page)
+- per-mutation hooks (each mutation lifecycle)
+
+The threshold is a soft gate: exceeding it triggers a Riley HIGH finding, not a build break. Shipping a slice that crosses the threshold without a documented reason is a slice-completion failure.
+
+Threshold rationale: pages over 400 LOC have repeatedly been the locus of overwrite-on-refetch hazards (§5B), shared-component bypasses (§5A), and copy-paste helpers. Keeping page files focused makes those hazards visible at code-review time.
 
 ---
 
