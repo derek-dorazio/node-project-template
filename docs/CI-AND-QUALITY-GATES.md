@@ -7,6 +7,8 @@ ruleset that makes those gates enforceable.
 
 The authoritative workflow file is `.github/workflows/ci.yml`.
 
+For the multi-pass, multi-agent PR review flow that runs *on top of* these CI gates (Riley Pass 1/Pass 2, Sage Pass 3, Archie Pass 4), see `docs/MULTI-AGENT-PR-REVIEW-SETUP.md` for the operator setup runbook and `rules/workflow-rules.md §11` for the process model.
+
 ## Trigger model
 
 The workflow runs on:
@@ -48,6 +50,10 @@ Rules:
   ✓ Block force pushes (non_fast_forward)
   ✓ Require a pull request before merging
       Required approving review count: 0   (raise per-team policy)
+                                            (set to 1 if using the multi-pass
+                                             review flow — Riley Pass 2 from a
+                                             non-author App identity satisfies
+                                             this; see MULTI-AGENT-PR-REVIEW-SETUP.md)
       Dismiss stale pull request approvals when new commits are pushed: on
       Required review thread resolution: on
       Allowed merge methods: squash only

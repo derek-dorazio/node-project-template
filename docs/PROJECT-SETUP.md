@@ -372,6 +372,10 @@ Copy `docs/ci-workflow-template.yml` to `.github/workflows/ci.yml` and customize
 3. Uncomment the deploy/smoke/e2e jobs when ready
 4. Push to trigger the pipeline
 
+For the CI gates themselves (the eight rule scanners, OpenAPI freshness check, Riley findings marker), branch-protection ruleset, and required status checks — see `docs/CI-AND-QUALITY-GATES.md`.
+
+For the multi-pass, multi-agent PR review process that layers on top of CI (Riley Pass 1 self-check, Riley Pass 2 cross-model, Sage Pass 3 security, Archie Pass 4 architecture) and the GitHub Apps identity setup that makes it possible — see `docs/MULTI-AGENT-PR-REVIEW-SETUP.md`. This is optional; skip it if you're not running multi-agent reviews yet.
+
 ---
 
 ## 7. Domain Setup (Optional)

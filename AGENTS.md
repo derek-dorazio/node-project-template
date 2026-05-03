@@ -56,7 +56,9 @@ Authoritative persona playbooks live in `personas/`. Tool-specific wrappers in `
 ### Subagents (isolated context, findings reports)
 
 - `personas/quinn.md` — verification lane selection, test execution, failure triage, release confidence
-- `personas/riley.md` — findings-first code review
+- `personas/riley.md` — generalist code review *(runs both implementer self-check Pass 1 and cross-model secondary Pass 2)*
+- `personas/sage.md` — security-focused review *(invoked when slice touches auth, validation, secrets, or data exposure; runs as Pass 3)*
+- `personas/archie.md` — architect *(also runs as PR reviewer Pass 4 when slice touches shared contracts, cross-module boundaries, infrastructure, or active plans/ADRs)*
 
 ### Default Responsibility Split
 
@@ -69,8 +71,12 @@ Authoritative persona playbooks live in `personas/`. Tool-specific wrappers in `
 - `Brad` / backend developer: backend/domain/API implementation
 - `Tess` / test planner: test case derivation, coverage matrix authorship
 - `Quinn` / QA test analyst: verification lane selection, test execution, failure triage, release confidence (subagent)
-- `Riley` / code reviewer: findings-first review and risk detection (subagent)
+- `Riley` / generalist code reviewer (subagent): findings-first review, risk detection. Runs as both implementer self-check (Pass 1, posted in PR body marker) and cross-model secondary (Pass 2, posted via `gh pr review` from a different App identity).
+- `Sage` / security reviewer (subagent, conditional): invoked when the slice touches auth, validation, secrets, or data exposure. Runs as Pass 3 in the multi-pass review flow.
+- `Archie` / architect (also runs as reviewer subagent, conditional): in addition to design-time work, invoked at PR-time as Pass 4 when the slice touches shared contracts, cross-module boundaries, infrastructure, or active plans/ADRs.
 - `Abe` / application specification builder: one-time spec extraction (dormant)
+
+The full multi-pass review flow (Pass 1/2/3/4, persona+pass+model header convention, GitHub Apps identity model, branch protection alignment) is documented in `rules/workflow-rules.md §11 Branching, Review, and Merge Cadence`. Operators setting up the GitHub App identities for a new repo should follow `docs/MULTI-AGENT-PR-REVIEW-SETUP.md`.
 
 If a role is misassigned during discussion or execution, agents should correct it proactively and update the relevant persona/rules if the boundary was not clear enough. The user should not need to police persona ownership in real time.
 

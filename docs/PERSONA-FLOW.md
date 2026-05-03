@@ -19,8 +19,11 @@ Authoritative persona playbooks live in `personas/<name>.md`. Tool-specific wrap
 | Frontend Developer | `Fran` | Active | React pages, hooks, components, frontend tests |
 | Test Planner | `Tess` | Active | Test case derivation from specs, test matrix, coverage audits |
 | QA/Test Engineer | `Quinn` | Subagent | Verification lane selection, test execution, failure triage, release confidence (isolated context, findings report) |
-| Code Reviewer | `Riley` | Subagent | Code quality, rule compliance, architectural correctness (isolated context, findings table) |
+| Code Reviewer | `Riley` | Subagent | Generalist code review — quality, rule compliance, architectural correctness. Runs both PR Pass 1 (implementer self-check, in PR body marker) and PR Pass 2 (cross-model secondary, via `gh pr review` from a different App identity). |
+| Security Reviewer | `Sage` | Subagent (conditional) | Security-focused PR review (Pass 3) — auth, validation, secrets, data exposure. Invoked only when the slice touches security-sensitive surfaces. |
 | Application Spec Builder | `Abe` | Dormant | One-time application-spec extraction from existing implementations; not part of the active flow. Invoke explicitly. |
+
+**Archie also runs as a PR reviewer (Pass 4)** when the slice touches shared contracts, cross-module boundaries, infrastructure, or active plans/ADRs — same architectural lens as design-time work, applied at PR time.
 
 Formal names remain canonical in plans and rules. Nicknames are shorthand only.
 
@@ -133,6 +136,29 @@ flowchart TD
 
 Archie is required for cross-cutting changes (new service, infra, auth, breaking migration); optional for in-boundary features.
 
+### 2.4 PR Review Lanes (multi-pass)
+
+Every PR landing on `main` flows through a multi-pass review. The full process model is in `rules/workflow-rules.md §11` *Branching, Review, and Merge Cadence*; the operator-level setup runbook is in `docs/MULTI-AGENT-PR-REVIEW-SETUP.md`.
+
+| Pass | Persona | Always runs? | Where it appears |
+|---|---|---|---|
+| 1 | `Riley` (implementer self-check) | Always | PR body marker `<!-- riley:findings -->` |
+| 2 | `Riley` (cross-model secondary) | Always | `gh pr review` from a different GitHub App identity |
+| 3 | `Sage` (security focus) | When slice touches auth, validation, secrets, data exposure | `gh pr review` from a separate App identity |
+| 4 | `Archie` (architecture pattern check) | When slice touches shared contracts, cross-module boundaries, infrastructure, or active plans/ADRs | `gh pr review` from a separate App identity |
+
+Pass 2 is what satisfies branch protection's `required_approving_review_count: 1` (a non-author App identity approving the PR). Pass 1 is in the PR body marker and CI-enforced.
+
+Each `gh pr review` post (Passes 2/3/4) starts with the persona+pass+model header per `rules/workflow-rules.md §11`:
+
+```
+> _<Persona> review · <pass type> · <model identity>_
+
+**Vote: APPROVE** | **Vote: REQUEST CHANGES** | **Vote: COMMENT**
+```
+
+For the GitHub Apps identity setup, see `docs/MULTI-AGENT-PR-REVIEW-SETUP.md`.
+
 ---
 
 ## 3. Folder Structure
@@ -193,6 +219,7 @@ project-root/
 │   ├── tess.md                                # Tess
 │   ├── quinn.md                               # Quinn (subagent body)
 │   ├── riley.md                               # Riley (subagent body)
+│   ├── sage.md                                # Sage (security-focused PR reviewer subagent)
 │   └── abe.md                                 # Abe (dormant, one-time spec extraction)
 │
 ├── .claude/                                   # Claude Code thin-pointer wrappers → personas/
@@ -357,16 +384,29 @@ project-root/
 
 ### 4.10 Riley — Code Reviewer
 
-- **Role:** Audit implementation against rules, plans, and use cases.
+- **Role:** Audit implementation against rules, plans, and use cases. Runs as both Pass 1 (implementer self-check, posted in the PR body marker) and Pass 2 (cross-model secondary, posted via `gh pr review` from a different App identity) in the multi-pass review flow (§2.4).
 - **Inputs:**
   - Slice under review.
   - Corresponding plan row and use cases.
   - Rules applicable to the changed modules.
 - **Outputs:**
   - Findings table with severity, category, and file references.
-  - Explicit merge recommendation or block.
+  - Explicit merge recommendation or block (vote: APPROVE / REQUEST CHANGES / COMMENT).
   - *(future)* Handoff-completeness review.
 - **Handoff criteria:** every finding is either resolved or explicitly accepted with rationale.
+
+### 4.11 Sage — Security Reviewer
+
+- **Role:** Security-focused PR reviewer (Pass 3). Applies a security lens, period — does not do generalist review.
+- **When invoked:** conditional. The slice touches auth or session middleware, JWT handling, authorization guards, input validation, secret handling, error envelopes, file upload/download, URL/hostname construction from user input, or any injection boundary. If none of those apply, Sage doesn't run.
+- **Inputs:**
+  - PR diff and context.
+  - Slice intent and the security-sensitive surfaces touched.
+  - Rules: service, architecture, testing.
+- **Outputs:**
+  - Findings table with severity (CRITICAL/HIGH/MEDIUM/LOW) and category (AUTHZ, AUTHN, VALIDATE, SECRET, EXPOSURE, INJECTION, PROVIDER, SCOPE).
+  - Vote: APPROVE / REQUEST CHANGES / COMMENT — posted via `gh pr review` from a separate App identity.
+- **Handoff criteria:** zero CRITICAL/HIGH findings = approve; any CRITICAL/HIGH = request changes.
 
 ---
 
@@ -389,8 +429,11 @@ project-root/
 | Brad / Fran | Quinn | Code + tests for verification | Quinn selects lanes, runs, triages failures |
 | Quinn | Tess | Verification results | Tess updates matrix coverage status |
 | Tess | Riley | Coverage audit | Test gaps flagged; coverage verified |
-| Brad / Fran | Riley | Code for review | Slice-completion checklist satisfied |
-| Riley | Brad / Fran | Findings table | Each finding resolved or explicitly accepted |
+| Brad / Fran | Riley (Pass 1, self-check) | PR body marker | Slice-completion checklist satisfied; findings posted in `<!-- riley:findings -->` block |
+| Brad / Fran | Riley (Pass 2, cross-model) | PR review from separate App identity | Pass 1 marker present; non-author App approves |
+| Brad / Fran | Sage (Pass 3, conditional) | PR review from separate App identity | Slice touches auth/validation/secrets/data exposure |
+| Brad / Fran | Archie (Pass 4, conditional) | PR review from separate App identity | Slice touches shared contracts, cross-module boundaries, infra, or active plans/ADRs |
+| Riley / Sage / Archie | Brad / Fran | Findings table | Each finding resolved or explicitly accepted; CRITICAL/HIGH must clear before merge |
 
 ---
 
@@ -403,6 +446,8 @@ project-root/
 - **Model-impact classification** (does this change the domain model?) → `Dom`.
 - **Test planning question** (what test cases does this use case need?) → `Tess`.
 - **Test execution question** (which lanes to run, is this failure real or stale?) → `Quinn`.
+- **Security-sensitive review** (auth, validation, secrets, data exposure, injection) → `Sage` (Pass 3, conditional).
+- **PR architecture review** (shared contract drift, cross-module boundary, infra, plan/ADR alignment) → `Archie` (Pass 4, conditional).
 - *(future)* **Operational question** (how does this run in prod) → `Archie` primarily.
 - *(future)* **Handoff gap** (doc missing, runbook missing) → `Riley` flags; originating persona fixes.
 
@@ -438,6 +483,8 @@ project-root/
 - Dom owns domain modeling and contract-impact classification.
 - Archie produces narrative `plans/<NN>-*.md` paired with a Beads epic, and writes ADRs in `docs/adr/` for durable cross-cutting decisions.
 - Brad, Fran, Tess, Quinn (subagent), and Riley (subagent) operate per their current persona playbooks under `personas/`.
+- Sage (security-focused PR reviewer subagent) and Archie (architecture-focused PR reviewer, in addition to design-time work) run conditionally on PRs per §2.4.
+- Multi-pass PR review flow (Riley Pass 1 + Pass 2 always; Sage Pass 3 and Archie Pass 4 conditional) is operational; see `rules/workflow-rules.md §11` and `docs/MULTI-AGENT-PR-REVIEW-SETUP.md`.
 
 **Dormant / explicit-invocation only:**
 
