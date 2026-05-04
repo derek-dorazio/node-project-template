@@ -98,6 +98,8 @@ Important:
 - At the start of a resumed session, re-read `rules/working-style.md` to restore the expected collaboration style and continuity defaults before implementing.
 - When a prior session intentionally paused work, check `docs/SESSION-HANDOFF.md` for the current "resume here" note before choosing the next slice.
 - When closing out a session where work is paused or context is about to change, create or update `docs/SESSION-HANDOFF.md` with a brief "resume here" note covering what was just completed, what's next, and any open decisions.
+- **Not every change needs a PR.** Beads state, narrative plan updates during execution, session-handoff notes, and trivial doc fixes are direct-push to `main` per `rules/workflow-rules.md §11` *What skips the PR flow*. Substantive plan, rule, ADR, or persona changes still go through the branch + PR + multi-pass review flow — and when in doubt, the agent asks the user before pushing direct (per *Substantive plan or rule change — ask before pushing*).
+- **Doc updates ride with the code change that triggered them.** When a slice changes user-visible behavior, public API, setup, or tests, the matching doc update lands in the *same* PR — not as a follow-up doc-only PR. The Beads story is not closeable until both are in the same merged commit. See `rules/workflow-rules.md §11` *Docs ride with code (Definition of Done)*.
 
 ## Quality Gates
 
