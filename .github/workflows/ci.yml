@@ -1,3 +1,15 @@
+# CI workflow for projects bootstrapped from node-project-template.
+#
+# This file IS the template — copy it into a new project's
+# .github/workflows/ci.yml and replace <projectName> with the real name.
+#
+# The eight quality gates that fire inside lint-typecheck (rules:check,
+# api:check, Riley findings marker, lint, typecheck, plus the rule
+# scanners), the job DAG, branch-protection ruleset, and required status
+# checks are documented in docs/CI-AND-QUALITY-GATES.md. The multi-pass
+# PR review flow that layers on top (Riley/Sage/Archie) is documented in
+# docs/MULTI-AGENT-PR-REVIEW-SETUP.md and rules/workflow-rules.md §11.
+
 name: CI
 
 on:

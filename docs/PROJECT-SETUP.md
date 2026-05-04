@@ -339,7 +339,7 @@ aws ecs run-task \
 
 ```bash
 # Register new task definition with real image
-# (CI/CD automates this — see docs/ci-workflow-template.yml)
+# (CI/CD automates this — see .github/workflows/ci.yml)
 
 # Force new deployment
 aws ecs update-service \
@@ -365,9 +365,9 @@ aws cloudfront create-invalidation --distribution-id DIST_ID --paths "/*"
 
 ## 6. CI/CD Setup
 
-Copy `docs/ci-workflow-template.yml` to `.github/workflows/ci.yml` and customize:
+The template's CI workflow lives at `.github/workflows/ci.yml`. When you cloned and renamed the template (step 1), it came along — customize:
 
-1. Replace `<projectName>` references
+1. Replace any remaining `<projectName>` references
 2. Set the correct AWS region and account ID
 3. Uncomment the deploy/smoke/e2e jobs when ready
 4. Push to trigger the pipeline
