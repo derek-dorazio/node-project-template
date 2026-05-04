@@ -9,6 +9,13 @@
 # checks are documented in docs/CI-AND-QUALITY-GATES.md. The multi-pass
 # PR review flow that layers on top (Riley/Sage/Archie) is documented in
 # docs/MULTI-AGENT-PR-REVIEW-SETUP.md and rules/workflow-rules.md §11.
+#
+# Self-skip on the template repo itself: every job carries
+#   if: github.repository != 'derek-dorazio/node-project-template'
+# so this workflow is a no-op when GitHub runs it on the template repo
+# (which has <projectName> placeholders, no lockfile, and nothing to
+# build). Cloned projects have a different `github.repository` value,
+# so the guard is transparent — CI runs normally there.
 
 name: CI
 
@@ -25,6 +32,7 @@ concurrency:
 jobs:
   lint-typecheck:
     name: lint-and-typecheck
+    if: github.repository != 'derek-dorazio/node-project-template'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -55,6 +63,7 @@ jobs:
   # =========================================================================
   service-coverage-report:
     name: service-coverage-report
+    if: github.repository != 'derek-dorazio/node-project-template'
     runs-on: ubuntu-latest
     needs: lint-typecheck
     services:
@@ -153,6 +162,7 @@ jobs:
   # =========================================================================
   webapp-unit-tests:
     name: webapp-unit-tests
+    if: github.repository != 'derek-dorazio/node-project-template'
     runs-on: ubuntu-latest
     needs: lint-typecheck
     steps:
@@ -214,7 +224,7 @@ jobs:
     name: coverage-summary
     runs-on: ubuntu-latest
     needs: [service-coverage-report, webapp-unit-tests]
-    if: always()
+    if: always() && github.repository != 'derek-dorazio/node-project-template'
     steps:
       - name: Download service coverage artifact
         continue-on-error: true
@@ -268,6 +278,7 @@ jobs:
   # =========================================================================
   service-build:
     name: service-build
+    if: github.repository != 'derek-dorazio/node-project-template'
     runs-on: ubuntu-latest
     needs: lint-typecheck
     steps:
@@ -282,6 +293,7 @@ jobs:
 
   webapp-build:
     name: webapp-build
+    if: github.repository != 'derek-dorazio/node-project-template'
     runs-on: ubuntu-latest
     needs: lint-typecheck
     steps:
